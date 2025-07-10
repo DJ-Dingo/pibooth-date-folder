@@ -1,19 +1,14 @@
-\============================ pibooth-date-folder ============================
-|PythonVersions| |PypiPackage| |Downloads|
+\=============================
+pibooth-date-folder Plugin
+==========================
 
-`pibooth-date-folder` is a plugin for the `pibooth`\_ application that automatically
-organizes photo output into date-based folders with a configurable daily split time.
+.. |PythonVersions| image:: [https://img.shields.io/pypi/pyversions/pibooth-date-folder.svg](https://img.shields.io/pypi/pyversions/pibooth-date-folder.svg)
+\:target: [https://pypi.org/project/pibooth-date-folder](https://pypi.org/project/pibooth-date-folder)
+.. |PypiVersion| image:: [https://img.shields.io/pypi/v/pibooth-date-folder.svg](https://img.shields.io/pypi/v/pibooth-date-folder.svg)
+\:target: [https://pypi.org/project/pibooth-date-folder](https://pypi.org/project/pibooth-date-folder)
 
-.. image:: [https://raw.githubusercontent.com/DJ-Dingo/pibooth-date-folder/main/logo.png](https://raw.githubusercontent.com/DJ-Dingo/pibooth-date-folder/main/logo.png)
-\:align: center
-\:alt: Example folder structure
-
-**Features**
-
-* Create output folders named as `YYYY-MM-DD_start-hour_HH-MM`
-* Configure the hour (1–24) and minute (00–59) when a new “day” begins
-* Detect threshold changes live and split into a new folder immediately
-* No manual edits to `pibooth.cfg`—uses PyPI entry\_points for auto-discovery
+**pibooth-date-folder** is a plugin for PiBooth that organizes photos into date-based
+folders with a configurable daily split time.
 
 .. contents::
 \:local:
@@ -31,40 +26,41 @@ organizes photo output into date-based folders with a configurable daily split t
 pip install pibooth-date-folder
 ```
 
-PiBooth will automatically discover the plugin via the `pibooth.plugins`
-entry point—no need to modify your `pibooth.cfg`.
+PiBooth will automatically discover the plugin via the PyPI entry point,
+so **no changes** to your `pibooth.cfg` are required.
 
 ## Configuration
 
-Upon first run, the plugin adds the following section to your
-`~/.config/pibooth/pibooth.cfg`:
+On first run, the plugin adds a new section in your PiBooth config file
+(`~/.config/pibooth/pibooth.cfg`):
 
 .. code-block:: ini
 
 ```
 [DATE_FOLDER]
-# Hour when the new day folder starts (default: 10)
+# Hour when the new day folder starts (1–24, default: 10)
 start_hour = 10
-# Minute when the new day folder starts (default: 00)
+# Minute when the new day folder starts (00–59, default: 00)
 start_minute = 00
 ```
 
-You can adjust these values live via the PiBooth settings menu;
-the plugin will detect changes on the next session without restart.
+Use the PiBooth settings menu to adjust these values **live**. Changes take effect
+at the start of the next session (strip).
 
 ## Usage
 
-Each time PiBooth returns to the **wait** state after a photo strip,
-the plugin:
+After each photo session, the plugin determines which folder to use:
 
-1. Reads `start_hour`/`start_minute` and compares to the last-used values.
-2. If thresholds have changed, creates today’s folder immediately.
-3. Otherwise, compares current time to the threshold:
+1. **Threshold update**: If you changed `start_hour` or `start_minute` since the last run,
+   a new folder for **today** is created immediately.
+2. **Normal logic**: Otherwise, compare the current time to the threshold:
 
-   * **Before** threshold → uses yesterday’s folder
-   * **At or after** threshold → uses today’s folder
+   * **Before** threshold → save into **yesterday’s** folder
+   * **At or after** threshold → save into **today’s** folder
 
-The resulting folder path is::
+Folders are named as:
+
+.. code-block:: text
 
 ```
 ~/Pictures/pibooth/YYYY-MM-DD_start-hour_HH-MM
@@ -72,25 +68,26 @@ The resulting folder path is::
 
 ## Examples
 
-* Default split time (10:00):
+* **Default split** (10:00):
 
-  * Photos taken **before 10:00** on 2025-07-11 → folder
-    `2025-07-10_start-hour_10-00`
-  * Photos taken **at or after 10:00** on 2025-07-11 → folder
-    `2025-07-11_start-hour_10-00`
+  * Photos **before** 10:00 on 2025-07-11 → saved in
+    `~/Pictures/pibooth/2025-07-10_start-hour_10-00`
+  * Photos **at or after** 10:00 on 2025-07-11 → saved in
+    `~/Pictures/pibooth/2025-07-11_start-hour_10-00`
 
-* Mid-day split:
+* **Mid-day split**:
 
-  1. At **14:05**, change to `start_hour = 14, start_minute = 05`.
-  2. After the current strip finishes, the plugin sees the new threshold
-     and creates `2025-07-11_start-hour_14-05`.
+  1. At 14:05, update to `start_hour = 14` and `start_minute = 05` via the menu.
+  2. After the session ends, the plugin creates
+     `~/Pictures/pibooth/2025-07-11_start-hour_14-05` for that session.
+  3. Subsequent sessions follow the normal logic until you change the threshold again.
 
 ## Changelog
 
 **v1.1.3**
 
-* Auto-detect threshold updates and force folder split on change
-* Track last threshold to ensure exactly one new folder per update
+* Detect threshold changes and force one new folder for today
+* Track last-used threshold to ensure exactly one split per update
 
 ## License
 
