@@ -96,8 +96,10 @@ License
 -------
 MIT License
 
-Links
------
+.. --- Links ------------------------------------------------------------------
+
+.. _`pibooth`: https://pypi.org/project/pibooth
+
 .. |PythonVersions| image:: https://img.shields.io/pypi/pyversions/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
 .. |PypiVersion| image:: https://img.shields.io/pypi/v/pibooth-date-folder.svg
