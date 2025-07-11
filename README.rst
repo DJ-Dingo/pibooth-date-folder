@@ -1,5 +1,5 @@
 =============================
-pibooth-date-folder Plugin v1.3.0
+pibooth-date-folder Plugin
 =============================
 
 .. |PythonVersions| image:: https://img.shields.io/pypi/pyversions/pibooth-date-folder.svg
@@ -7,7 +7,7 @@ pibooth-date-folder Plugin v1.3.0
 .. |PypiVersion| image:: https://img.shields.io/pypi/v/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
 
-**pibooth-date-folder** v1.3.0 is a PiBooth plugin that
+**pibooth-date-folder** is a plugin for PiBooth that
 organizes photos into per-date folders with a configurable
 split time, and supports multiple quoted base directories.
 
@@ -86,8 +86,8 @@ Given in your config:
   Photos saved in  
   `"~/Pictures/pibooth/2025-07-12_start-hour_10-00", "~/Pictures/backup_booth/2025-07-12_start-hour_10-00"`
 
-Changelog v1.3.0
-----------------
+Changelog
+---------
 - In-memory override of `GENERAL/directory` (no disk writes)  
 - Preserves multiple quoted base paths and `~` prefix  
 - One date-folder per threshold change or day-boundary
