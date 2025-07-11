@@ -97,6 +97,10 @@ License
 -------
 MIT License
 
+Links
+-----
+`pibooth`_ 
+
 .. --- Links ------------------------------------------------------------------
 
 .. _`pibooth`: https://pypi.org/project/pibooth
