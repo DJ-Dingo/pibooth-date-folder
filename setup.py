@@ -5,7 +5,7 @@ long_description = open("README.rst", encoding="utf-8").read()
 
 setup(
     name="pibooth-date-folder",
-    version="1.3.0",                    # bump this on each release
+    version="1.3.1",                    # bump this on each release
     description="PiBooth plugin to split output folders by date+threshold",
     long_description=long_description,
     long_description_content_type="text/x-rst",
