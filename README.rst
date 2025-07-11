@@ -2,14 +2,11 @@
 pibooth-date-folder Plugin
 =============================
 
-.. |PythonVersions| image:: https://img.shields.io/pypi/pyversions/pibooth-date-folder.svg
-   :target: https://pypi.org/project/pibooth-date-folder
-.. |PypiVersion| image:: https://img.shields.io/pypi/v/pibooth-date-folder.svg
-   :target: https://pypi.org/project/pibooth-date-folder
+|PythonVersions| |PypiVersion| |Downloads|
 
 **pibooth-date-folder** is a plugin for PiBooth that
 organizes photos into per-date folders with a configurable
-split time, and supports multiple quoted base directories.
+split time, supporting multiple quoted base directories.
 
 .. contents::
    :local:
@@ -21,16 +18,16 @@ Requirements
 
 Installation
 ------------
-Run:
+Run::
 
     pip install pibooth-date-folder
 
-No edits to your `pibooth.cfg` are needed; PiBooth will auto-discover the plugin.
+PiBooth will auto-discover the plugin—**no edits** to your `pibooth.cfg` are needed.
 
 Configuration
 -------------
 On first launch, this plugin adds a `[DATE_FOLDER]` section to your
-`~/.config/pibooth/pibooth.cfg`:
+`~/.config/pibooth/pibooth.cfg`::
 
     [DATE_FOLDER]
     # Hour when a new date-folder starts (1–24, default: 10)
@@ -49,14 +46,14 @@ Usage
 
 2. **Per-session logic** (`state_wait_enter`)  
    - Builds a “threshold” datetime from `start_hour:start_minute`.  
-   - If you have **changed** the threshold since the last session, it treats the next folder as **today**.  
+   - If you **changed** the threshold since the last session, it treats the next folder as **today**.  
    - Otherwise, if the current time is **before** the threshold, it treats it as **yesterday**, else **today**.  
-   - Creates a subfolder named:
+   - Creates a subfolder named::
 
-     YYYY-MM-DD_start-hour_HH-MM
+        YYYY-MM-DD_start-hour_HH-MM
 
      under each of your original base directories.  
-   - Overrides PiBooth’s in-memory `directory` to the quoted list of these new folders, so that PiBooth writes into **all** of them.
+   - Overrides PiBooth’s in-memory `directory` to the quoted list of these new folders, writing into **all** of them.
 
 No on-disk config writes are performed—the plugin never alters your config file.
 
@@ -64,27 +61,29 @@ Testing the Threshold
 ---------------------
 To simulate a day-boundary without waiting 24 hours:
 
-1. In the PiBooth Settings menu, set `start_hour`/`start_minute` to a time a few minutes **ahead** of now (for example, it’s 13:58; set to 14:00).  
-2. Close the menu and take a photo session. Because this is the **first** session after changing the threshold, the plugin always treats it as **today**, so you will see a folder named with today’s date.  
-3. Take one more session **before** the threshold time; now that the threshold hasn’t changed, the plugin applies “before threshold → yesterday,” creating a folder for the **previous** date.  
-4. Take another session **after** the threshold time; it will create a folder for **today** again.
+1. In PiBooth’s Settings menu, set `start_hour`/`start_minute` to a time a few minutes **ahead** of now (e.g., it’s 13:58; set to 14:00).  
+2. Close the menu and take a photo session. Because it’s the **first** session after changing the threshold, the plugin treats it as **today**, creating a folder for today’s date.  
+3. Take another session **before** the threshold time; since you didn’t change the threshold again, the plugin applies “before threshold → yesterday,” creating a folder for the **prior** date.  
+4. Take one more session **after** the threshold; it creates a folder for **today** again.
 
-This way you can verify both “yesterday” and “today” folder behavior within minutes.
+This lets you verify both “yesterday” and “today” folder behavior within minutes.
 
 Examples
 --------
-Given in your config:
+Given in your config::
 
     [GENERAL]
     directory = "~/Pictures/pibooth", "~/Pictures/backup_booth"
 
-- **Before** threshold (e.g. 10:00, time is 09:30):  
-  Photos saved in  
-  `"~/Pictures/pibooth/2025-07-11_start-hour_10-00", "~/Pictures/backup_booth/2025-07-11_start-hour_10-00"`
+- **Before** threshold (10:00, time 09:30):  
+  Photos saved in::
+
+      "~/Pictures/pibooth/2025-07-11_start-hour_10-00", "~/Pictures/backup_booth/2025-07-11_start-hour_10-00"
 
 - **After** threshold (time >10:00):  
-  Photos saved in  
-  `"~/Pictures/pibooth/2025-07-12_start-hour_10-00", "~/Pictures/backup_booth/2025-07-12_start-hour_10-00"`
+  Photos saved in::
+
+      "~/Pictures/pibooth/2025-07-12_start-hour_10-00", "~/Pictures/backup_booth/2025-07-12_start-hour_10-00"
 
 Changelog
 ---------
@@ -96,4 +95,11 @@ License
 -------
 MIT License
 
-.. _pibooth: https://github.com/pibooth/pibooth
+Links
+-----
+.. |PythonVersions| image:: https://img.shields.io/pypi/pyversions/pibooth-date-folder.svg
+   :target: https://pypi.org/project/pibooth-date-folder
+.. |PypiVersion| image:: https://img.shields.io/pypi/v/pibooth-date-folder.svg
+   :target: https://pypi.org/project/pibooth-date-folder
+.. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
+   :target: https://pypi.org/project/pibooth-date-folder
