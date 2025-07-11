@@ -3,50 +3,57 @@ from datetime import datetime, timedelta
 import pibooth
 from pibooth.utils import LOGGER
 
-__version__ = "1.1.3"
+__version__ = "1.3.0"
+
+# Cache original base directories (never rewrite on disk)
+_base_dirs = None
+# Cache last threshold to detect changes
+_last_thr = None
 
 @pibooth.hookimpl
 def pibooth_configure(cfg):
     """
-    Register configuration options for start time and initialize
-    tracking of the last-used threshold.
+    Register split‐time options and snapshot the original GENERAL/directory
+    (as a quoted, comma‐separated list) exactly once.
     """
-    # Hour option (1–24)
-    hours = [str(h) for h in range(1, 25)]
-    cfg.add_option(
-        'DATE_FOLDER',
-        'start_hour',
-        10,
-        'Hour when new day folder starts',
-        'Start hour',
-        hours
-    )
-    # Minute option (00–59)
+    global _base_dirs
+    # 1) Register hour and minute options
+    hours   = [str(h) for h in range(1, 25)]
     minutes = [str(m).zfill(2) for m in range(0, 60)]
     cfg.add_option(
-        'DATE_FOLDER',
-        'start_minute',
-        '00',
-        'Minute when new day folder starts',
-        'Start minute',
-        minutes
+        'DATE_FOLDER', 'start_hour',   10,
+        'Hour when new day folder starts',   'Start hour',   hours
     )
-    # Initialize last_threshold if not present
-    try:
-        cfg.get('DATE_FOLDER', 'last_threshold')
-    except Exception:
-        cfg.set('DATE_FOLDER', 'last_threshold', '')
+    cfg.add_option(
+        'DATE_FOLDER', 'start_minute', '00',
+        'Minute when new day folder starts', 'Start minute', minutes
+    )
+
+    # 2) Snapshot original GENERAL/directory once
+    if _base_dirs is None:
+        raw = cfg.get('GENERAL', 'directory')
+        # split on commas, strip whitespace and quotes
+        _base_dirs = [
+            p.strip().strip('"').strip("'")
+            for p in raw.split(',')
+            if p.strip()
+        ]
+        LOGGER.info("Date-folder v%s: original bases = %r",
+                    __version__, _base_dirs)
 
 @pibooth.hookimpl
 def state_wait_enter(app):
     """
-    Recalculate output folder on each return to WAIT state.
-    If the threshold (start_hour/start_minute) has changed since last run,
-    force a new folder for today; otherwise use normal threshold logic.
+    On each return to WAIT:
+      - Compute effective date (today vs. yesterday) based on threshold.
+      - Create date-folder under each original base.
+      - Override PiBooth’s in-memory GENERAL/directory to the quoted list.
     """
+    global _last_thr, _base_dirs
     cfg = app._config
+    now = datetime.now()
 
-    # Fetch configured start_hour and start_minute
+    # 1) Read split-time
     try:
         h = int(cfg.gettyped('DATE_FOLDER', 'start_hour'))
     except Exception:
@@ -55,46 +62,41 @@ def state_wait_enter(app):
     try:
         m = int(cfg.gettyped('DATE_FOLDER', 'start_minute'))
     except Exception:
-        LOGGER.warning("Invalid start_minute, defaulting to 0")
+        LOGGER.warning("Invalid start_minute, defaulting to 00")
         m = 0
 
-    # Build threshold identifier and datetime
-    threshold_str = f"{h:02d}-{m:02d}"
-    now = datetime.now()
-    threshold_dt = now.replace(hour=h, minute=m, second=0, microsecond=0)
+    # 2) Build threshold identifiers
+    thr = f"{h:02d}-{m:02d}"
+    thr_dt = now.replace(hour=h, minute=m, second=0, microsecond=0)
 
-    # Retrieve last threshold value
-    try:
-        last_threshold = cfg.get('DATE_FOLDER', 'last_threshold')
-    except Exception:
-        last_threshold = ''
-
-    # Determine effective_date based on threshold change or normal logic
-    if last_threshold != threshold_str:
-        # Threshold was updated since last run: force new folder today
-        effective_date = now.date()
+    # 3) Decide date
+    if _last_thr is None or thr != _last_thr:
+        effective = now.date()
     else:
-        # Normal threshold comparison
-        if now < threshold_dt:
-            effective_date = (now - timedelta(days=1)).date()
+        effective = (now - timedelta(days=1)).date() if now < thr_dt else now.date()
+    _last_thr = thr
+
+    # 4) Build folder suffix
+    date_str = effective.strftime("%Y-%m-%d")
+    suffix   = f"{date_str}_start-hour_{thr}"
+
+    # 5) Create under each base and quote
+    quoted = []
+    for base in _base_dirs:
+        base_dir = os.path.expanduser(base)
+        tgt = os.path.join(base_dir, suffix)
+        os.makedirs(tgt, exist_ok=True)
+        # preserve ~ in front if user had it originally
+        if base.startswith('~'):
+            rel = os.path.join(base, suffix)
         else:
-            effective_date = now.date()
+            rel = tgt
+        quoted.append(f'"{rel}"')
 
-    # Update last_threshold for next run
-    cfg.set('DATE_FOLDER', 'last_threshold', threshold_str)
+    # 6) Override in-memory only
+    cfg.set('GENERAL', 'directory', ', '.join(quoted))
 
-    # Build target folder name and path
-    date_str = effective_date.strftime("%Y-%m-%d")
-    folder_name = f"{date_str}_start-hour_{threshold_str}"
-    base_dir = os.path.expanduser("~/Pictures/pibooth")
-    target = os.path.join(base_dir, folder_name)
-    os.makedirs(target, exist_ok=True)
-
-    # Update pibooth's save directory dynamically
-    cfg.set('GENERAL', 'directory', target)
-
-    # Log details for debugging
     LOGGER.info(
-        "Date-folder plugin v%s: threshold=%s (last=%s), now=%02d:%02d -> '%s'",
-        __version__, threshold_str, last_threshold, now.hour, now.minute, target
+        "Date-folder v%s: threshold=%s now=%02d:%02d → %r",
+        __version__, thr, now.hour, now.minute, quoted
     )
