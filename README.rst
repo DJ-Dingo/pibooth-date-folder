@@ -88,6 +88,7 @@ Given in your config::
 
 Changelog
 ---------
+- V1.3.0
 - In-memory override of `GENERAL/directory` (no disk writes)  
 - Preserves multiple quoted base paths and `~` prefix  
 - One date-folder per threshold change or day-boundary
@@ -106,3 +107,5 @@ MIT License
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+Links
+-----
