@@ -4,8 +4,9 @@ pibooth-date-folder Plugin
 
 |PythonVersions| |PypiVersion| |Downloads|
 
-**pibooth-date-folder** is a plugin for PiBooth that
-organizes photos into per-date folders with a configurable
+``pibooth-date-folder`` is a plugin for the `pibooth`_ application.
+
+It organizes photos into per-date folders with a configurable
 split time, supporting multiple quoted base directories.
 
 .. contents::
