@@ -1,5 +1,5 @@
 =============================
-pibooth-date-folder Plugin
+pibooth-date-folder
 =============================
 
 |PythonVersions| |PypiVersion| |Downloads|
