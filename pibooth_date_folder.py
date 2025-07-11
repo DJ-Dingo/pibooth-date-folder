@@ -3,43 +3,45 @@ from datetime import datetime, timedelta
 import pibooth
 from pibooth.utils import LOGGER
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
-# Cache original base directories (never rewrite on disk)
 _base_dirs = None
-# Cache last threshold to detect changes
-_last_thr = None
+_last_thr  = None
 
 @pibooth.hookimpl
 def pibooth_configure(cfg):
     """
-    Register split‐time options and snapshot the original GENERAL/directory
-    (as a quoted, comma‐separated list) exactly once.
+    Register split‐time options (with full help text) and snapshot the
+    original GENERAL/directory exactly once.
     """
     global _base_dirs
-    # 1) Register hour and minute options
-    hours   = [str(h) for h in range(1, 25)]
+    # 1) Register hour option with detailed help
+    hours = [str(h) for h in range(1, 25)]
+    cfg.add_option(
+        'DATE_FOLDER',
+        'start_hour',
+        10,
+        "Change the hour (1–24) when new date-folders start (Default = 10)",
+        "Start hour",
+        hours
+    )
+    # 2) Register minute option with detailed help
     minutes = [str(m).zfill(2) for m in range(0, 60)]
     cfg.add_option(
-        'DATE_FOLDER', 'start_hour',   10,
-        'Hour when new day folder starts',   'Start hour',   hours
-    )
-    cfg.add_option(
-        'DATE_FOLDER', 'start_minute', '00',
-        'Minute when new day folder starts', 'Start minute', minutes
+        'DATE_FOLDER',
+        'start_minute',
+        '00',
+        "Change the minute (00–59) when new date-folders start (Default = 00)",
+        "Start minute",
+        minutes
     )
 
-    # 2) Snapshot original GENERAL/directory once
+    # 3) Snapshot the user’s original quoted GENERAL/directory once
     if _base_dirs is None:
         raw = cfg.get('GENERAL', 'directory')
-        # split on commas, strip whitespace and quotes
-        _base_dirs = [
-            p.strip().strip('"').strip("'")
-            for p in raw.split(',')
-            if p.strip()
-        ]
-        LOGGER.info("Date-folder v%s: original bases = %r",
-                    __version__, _base_dirs)
+        _base_dirs = [p.strip().strip('"').strip("'") for p in raw.split(',') if p.strip()]
+        LOGGER.info("Date-folder v%s: original bases = %r", __version__, _base_dirs)
+
 
 @pibooth.hookimpl
 def state_wait_enter(app):
