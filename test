@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -e
+
+need_root() { if [ "$(id -u)" -ne 0 ]; then echo "Kør med sudo."; exit 1; fi; }
+need_root
+
+echo "=== RTC setup helper for Raspberry Pi ==="
+
+# 1) Pakker
+if ! command -v i2cdetect >/dev/null 2>&1; then
+  echo "[*] Installerer i2c-tools ..."
+  apt-get update -y
+  apt-get install -y i2c-tools
+fi
+
+# 2) Aktiver I2C i config.txt
+CFG=/boot/config.txt
+if ! grep -q '^dtparam=i2c_arm=on' "$CFG"; then
+  echo "[*] Aktiverer I2C i $CFG"
+  printf "\n# Enable I2C for RTC\ndtparam=i2c_arm=on\n" >> "$CFG"
+fi
+
+# 3) Scan I2C-bus
+BUS=1
+echo "[*] Scanner I2C bus $BUS..."
+i2cdetect -y $BUS || true
+
+# 4) Gæt chip-typer ud fra kendte adresser
+echo
+echo "Vælg RTC-chip (tryk tal og Enter):"
+echo "  1) DS3231 (0x68, meget udbredt)"
+echo "  2) DS1307 (0x68)"
+echo "  3) PCF8523 (0x68)"
+echo "  4) PCF8563 (0x51)"
+echo "  5) RV3028 (0x52)"
+echo "  6) Anden (indtast navn til i2c-rtc overlay manuelt)"
+read -rp "Valg [1-6]: " CH
+
+case "$CH" in
+  1) CHIP=ds3231;;
+  2) CHIP=ds1307;;
+  3) CHIP=pcf8523;;
+  4) CHIP=pcf8563;;
+  5) CHIP=rv3028;;
+  6) read -rp "Indtast chipnavn til overlay (f.eks. ds3231): " CHIP;;
+  *) echo "Ugyldigt valg."; exit 1;;
+esac
+
+# 5) Ryd gamle i2c-rtc linjer og tilføj den nye
+echo "[*] Opdaterer dtoverlay i $CFG ..."
+sed -i '/^dtoverlay=i2c-rtc/d' "$CFG"
+printf "dtoverlay=i2c-rtc,%s\n" "$CHIP" >> "$CFG"
+echo "    -> dtoverlay=i2c-rtc,$CHIP"
+
+# 6) Fjern fake-hwclock (forstyrrer rigtig RTC)
+if dpkg -s fake-hwclock >/dev/null 2>&1; then
+  echo "[*] Fjerner fake-hwclock ..."
+  systemctl stop fake-hwclock || true
+  systemctl disable fake-hwclock || true
+  apt-get -y purge fake-hwclock || true
+fi
+
+# 7) Lille boot-service der læser tid fra RTC tidligt
+echo "[*] Laver systemd unit rtc-init.service ..."
+cat >/etc/systemd/system/rtc-init.service <<'EOF'
+[Unit]
+Description=Load time from hardware RTC early
+DefaultDependencies=no
+Before=sysinit.target time-sync.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/hwclock --hctosys
+
+[Install]
+WantedBy=sysinit.target
+EOF
+
+systemctl daemon-reload
+systemctl enable rtc-init.service
+
+# 8) Sæt tiden i RTC (kræver korrekt systemtid nu)
+echo
+echo "Hvis systemtiden er korrekt nu, skriver jeg den til RTC."
+read -rp "Skriv systemtid til RTC? [Y/n]: " ANS
+ANS=${ANS:-Y}
+if [[ "$ANS" =~ ^[Yy]$ ]]; then
+  # ved første boot efter overlay kan /dev/rtc0 mangle indtil genstart,
+  # så prøv blidt – ellers informer brugeren
+  if [ -e /dev/rtc0 ]; then
+    hwclock -w
+    echo "[OK] Tiden er skrevet til RTC."
+  else
+    echo "[!] /dev/rtc0 findes ikke endnu. Genstart kræves, kør derefter: sudo hwclock -w"
+  fi
+fi
+
+echo
+echo "=== Færdig. Genstart anbefales nu. ==="
+echo "Efter genstart kan du teste med:"
+echo "  timedatectl"
+echo "  sudo hwclock -r"
