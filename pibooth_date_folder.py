@@ -166,7 +166,7 @@ def pibooth_configure(cfg):
                    "Start minute", minutes)
 
     # New behavior switch:
-    cfg.add_option('DATE_FOLDER', 'on_change_mode', 'force_today',
+    cfg.add_option('DATE_FOLDER', 'on_change_mode', 'strict',
                    "Mode for how folder switching is handled: strict (default) or force_today",
                    "On-change mode", ['force_today', 'strict'])
 
@@ -241,5 +241,6 @@ def state_wait_enter(app):
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
+
 
 
