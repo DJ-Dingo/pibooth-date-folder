@@ -35,9 +35,22 @@ On first launch, this plugin adds a `[DATE_FOLDER]` section to your
     start_hour = 10
     # Minute when a new date-folder starts (00–59, default: 00)
     start_minute = 00
+    # Mode for how folder switching is handled: strict (default) or force_today
+    on_change_mode = strict
 
 Adjust these values in PiBooth’s Settings menu (ESC → Settings) at any time.
 Changes take effect at the start of the next photo session.
+
+**Explanation of options:**
+
+- **start_hour / start_minute**  
+  Define the daily time when a new folder should start. Useful if your events run past midnight but should count as the same “day” (e.g. starting a new folder at 10:00 the next day).
+
+
+- **on_change_mode**  
+  - ``strict`` *(default)* — The folder switches exactly at the configured time (Everyday), even if no sessions have occurred yet.  
+  - ``force_today`` — The folder always matches the current calendar date (Now/Today), ignoring the configured time.
+
 
 Usage
 -----
@@ -55,8 +68,6 @@ Usage
 
      under each of your original base directories.  
    - Overrides PiBooth’s in-memory `directory` to the quoted list of these new folders, writing into **all** of them.
-
-No on-disk config writes are performed—the plugin never alters your config file.
 
 Testing the Threshold
 ---------------------
@@ -89,7 +100,7 @@ Given in your config::
 Changelog
 ---------
 - V1.3.0
-- In-memory override of `GENERAL/directory` (no disk writes)  
+- In-memory override of `GENERAL/directory`
 - Preserves multiple quoted base paths and `~` prefix  
 - One date-folder per threshold change or day-boundary
 
@@ -111,3 +122,4 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
