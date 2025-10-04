@@ -15,7 +15,7 @@ split time, supporting multiple quoted base directories.
 Requirements
 ------------
 - Python 3.6+
-- PiBooth 2.8 or later
+- PiBooth 2.0.8 or later
 
 Installation
 ------------
@@ -48,8 +48,8 @@ Changes take effect at the start of the next photo session.
 
 
 - **on_change_mode**  
-  - ``strict`` *(default)* — The folder switches exactly at the configured time (Everyday), even if no sessions have occurred yet.  
-  - ``force_today`` — The folder always matches the current calendar date (Now/Today), ignoring the configured time.
+  - ``strict`` *(default)* — The folder switches exactly at the configured time every day, even if no sessions have occurred yet.
+  - ``force_today`` — The folder always matches the current calendar date, ignoring the configured time.
 
 
 Usage
@@ -99,14 +99,15 @@ Given in your config::
 
 Changelog
 ---------
-- V1.3.0
-- In-memory override of `GENERAL/directory`
-- Preserves multiple quoted base paths and `~` prefix  
-- One date-folder per threshold change or day-boundary
+- v1.4.0
+  - In-memory override of `GENERAL/directory`
+  - Added ``on_change_mode`` (``strict`` default / ``force_today`` override).
+  - First session after changing the threshold is treated as “today”.
+  - Keeps multiple quoted base paths and `~` prefix; writes to all.
 
 License
 -------
-MIT License
+GPL-3.0-or-later
 
 Links
 -----
@@ -122,4 +123,5 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
