@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pibooth-date-folder"
+version = "1.4.0"
+description = "PiBooth plugin to split output folders by date + threshold"
+readme = "README.rst"
+requires-python = ">=3.8"
+authors = [{ name = "Kenneth Nicholas Jørgensen" }]
+license = { text = "GPL-3.0-or-later" }
+dependencies = [
+  "pibooth >= 2.0.8",
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Operating System :: OS Independent",
+  "Topic :: Multimedia :: Graphics",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+# Én enkelt .py fil som modul:
+[tool.setuptools]
+py-modules = ["pibooth_date_folder"]
+
+# Entry point til PiBooth plugin discovery:
+[project.entry-points."pibooth.plugins"]
+date_folder = "pibooth_date_folder"
