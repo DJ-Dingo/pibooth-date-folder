@@ -1,11 +1,11 @@
-# pibooth_date_folder.py  —  v1.5.0
+# pibooth_date_folder.py  —  v1.5.1
 import os
 import re
 from datetime import datetime, timedelta
 import pibooth
 from pibooth.utils import LOGGER
 
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 
 # Cached bases:
 #  - display form (may start with '~'), no trailing slash
@@ -280,6 +280,7 @@ def state_wait_enter(app):
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
+
 
 
 
