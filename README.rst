@@ -31,7 +31,7 @@ On first launch, this plugin adds a `[DATE_FOLDER]` section to your
 `~/.config/pibooth/pibooth.cfg`::
 
     [DATE_FOLDER]
-    # Hour when a new date-folder starts (1–24, default: 10)
+    # Hour when a new date-folder starts (0–23, default: 10)
     start_hour = 10
     # Minute when a new date-folder starts (00–59, default: 00)
     start_minute = 00
@@ -99,11 +99,15 @@ Given in your config::
 
 Changelog
 ---------
-- v1.4.0
+- v1.5.0
   - In-memory override of `GENERAL/directory`
   - Added ``on_change_mode`` (``strict`` default / ``force_today`` override).
   - First session after changing the threshold is treated as “today”.
   - Keeps multiple quoted base paths and `~` prefix; writes to all.
+  - Switched hour range to 0–23 (UI/docs) for clarity.
+  - Legacy value 24 is treated as 00 (midnight) internally.
+  - Clamps minutes to 0–59 for robustness.
+
 
 License
 -------
@@ -123,5 +127,6 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
