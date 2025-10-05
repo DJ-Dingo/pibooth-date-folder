@@ -21,6 +21,7 @@ Installation
 ------------
 Run::
 
+
     pip install pibooth-date-folder
 
 PiBooth will auto-discover the plugin—**no edits** to your `pibooth.cfg` are needed.
@@ -86,11 +87,13 @@ Examples
 --------
 Given in your config::
 
+
     [GENERAL]
     directory = "~/Pictures/pibooth", "~/Pictures/backup_booth"
 
 - **Before** threshold (10:00, time 09:30):  
   Photos saved in::
+
 
       "~/Pictures/pibooth/2025-07-11_start-hour_10-00", "~/Pictures/backup_booth/2025-07-11_start-hour_10-00"
 
@@ -130,6 +133,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
