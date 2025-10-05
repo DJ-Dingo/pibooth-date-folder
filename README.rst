@@ -32,13 +32,13 @@ On first launch, this plugin adds a `[DATE_FOLDER]` section to your
 `~/.config/pibooth/pibooth.cfg`::
 
 
- [DATE_FOLDER]
- # Hour when a new date-folder starts (0–23, default: 10)
- start_hour = 10
- # Minute when a new date-folder starts (00–59, default: 00)
- start_minute = 00
- # Mode for how folder switching is handled: strict (default) or force_today
- on_change_mode = strict
+    [DATE_FOLDER]
+    # Hour when a new date-folder starts (0–23, default: 10)
+    start_hour = 10
+    # Minute when a new date-folder starts (00–59, default: 00)
+    start_minute = 00
+    # Mode for how folder switching is handled: strict (default) or force_today
+    on_change_mode = strict
 
 Adjust these values in PiBooth’s Settings menu (ESC → Settings) at any time.
 Changes take effect at the start of the next photo session.
@@ -133,6 +133,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
