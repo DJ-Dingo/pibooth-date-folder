@@ -94,6 +94,7 @@ Usage
 
         YYYY-MM-DD_start-hour_HH-MM
 
+
      under each of your original base directories.  
    - Overrides PiBooth’s in-memory `directory` to the quoted list of these new folders, writing into **all** of them.
 
@@ -159,6 +160,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
