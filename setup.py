@@ -1,18 +1,21 @@
+from pathlib import Path
+import re
 from setuptools import setup
-import io, os
 
-plugin = __import__("pibooth_date_folder")
+HERE = Path(__file__).parent
+MODULE = HERE / "pibooth_date_folder.py"
 
-def read(path):
-    here = os.path.abspath(os.path.dirname(__file__))
-    with io.open(os.path.join(here, path), encoding="utf-8") as f:
-        return f.read()
+# Parse version without importing the module
+TEXT = MODULE.read_text(encoding="utf-8")
+VERSION = re.search(r'__version__\s*=\s*"([^"]+)"', TEXT).group(1)
 
 setup(
     name="pibooth-date-folder",
-    version=getattr(plugin, "__version__", "0.0.0"),
-    description=(plugin.__doc__ or "PiBooth plugin to split/save sessions into date-based folders with optional time threshold."),
-    long_description=read("README.rst"),
+    version=VERSION,
+    author="Kenneth Nicholas Jørgensen",
+    author_email="",
+    description="PiBooth plugin to split/save sessions into date-based folders with an optional daily time threshold.",
+    long_description=(HERE / "README.rst").read_text(encoding="utf-8"),
     long_description_content_type="text/x-rst",
     url="https://github.com/DJ-Dingo/pibooth-date-folder",
     project_urls={
