@@ -65,6 +65,7 @@ Usage
    - Otherwise, if the current time is **before** the threshold, it treats it as **yesterday**, else **today**.  
    - Creates a subfolder named::
 
+
         YYYY-MM-DD_start-hour_HH-MM
 
      under each of your original base directories.  
@@ -129,6 +130,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
