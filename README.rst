@@ -95,7 +95,7 @@ Usage
         YYYY-MM-DD_start-hour_HH-MM
 
 
-     under each of your original base directories.  
+   - under each of your original base directories.  
    - Overrides PiBooth’s in-memory `directory` to the quoted list of these new folders, writing into **all** of them.
 
 Testing the Threshold
@@ -133,9 +133,16 @@ Given in your config::
 Changelog
 ---------
 - v1.5.5
+
+  🎉 Initial release of the pibooth-date-folder plugin.
+
+  - Automatically organizes photos into date-based folders  
+  - Configurable daily switch time  
+  - Works with multiple base directories
+
+- latest updates
   - In-memory override of `GENERAL/directory`
   - Added ``on_change_mode`` (``strict`` default / ``force_today`` override).
-  - First session after changing the threshold is treated as “today”.
   - Keeps multiple quoted base paths and `~` prefix; writes to all.
   - Switched hour range to 0–23 (UI/docs) for clarity.
   - Legacy value 24 is treated as 00 (midnight) internally.
@@ -160,6 +167,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
