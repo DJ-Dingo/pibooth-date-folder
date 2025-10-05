@@ -17,6 +17,18 @@ Requirements
 - Python 3.6+
 - PiBooth 2.0.8 or later
 
+Prerequisites
+-------------
+This plugin relies on the system date and time to determine when new folders should be created.  
+You must ensure that the device has a **correct system clock** before running PiBooth. This can be achieved by one of the following:
+
+- **Internet access** for NTP time synchronization  
+- **A hardware RTC module** (e.g., DS3231)  
+- **Manually setting the system time** prior to launching PiBooth
+
+If the system time is incorrect, the plugin may create folders under the wrong date or switch at unexpected times.
+
+
 Installation
 ------------
 Run::
@@ -42,6 +54,18 @@ On first launch, this plugin adds a `[DATE_FOLDER]` section to your
 
 Adjust these values in PiBooth’s Settings menu (ESC → Settings) at any time.
 Changes take effect at the start of the next photo session.
+
+Setup in Pibooth Menu
+---------------------
+
+.. image:: docs/images/settings-menu.png
+   :alt: Pibooth settings menu showing Date_folder entry
+   :align: center
+
+.. image:: docs/images/date-folder-menu.png
+   :alt: Date_folder plugin settings screen
+   :align: center
+
 
 **Explanation of options:**
 
@@ -133,6 +157,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
