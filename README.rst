@@ -17,8 +17,8 @@ Requirements
 - Python 3.6+
 - PiBooth 2.0.8 or later
 
-Prerequisites
--------------
+IMPORTANT — Date/Time must be set correct before using this plugin
+------------------------------------------------------------------
 This plugin relies on the system date and time to determine when new folders should be created.  
 You must ensure that the device has a **correct system clock** before running PiBooth. This can be achieved by one of the following:
 
@@ -32,7 +32,6 @@ If the system time is incorrect, the plugin may create folders under the wrong d
 Installation
 ------------
 Run::
-
 
     pip install pibooth-date-folder
 
@@ -129,9 +128,10 @@ Given in your config::
 
       "~/Pictures/pibooth/2025-07-12_start-hour_10-00", "~/Pictures/backup_booth/2025-07-12_start-hour_10-00"
 
+
 Changelog
 ---------
-- v1.5.4
+- v1.5.5
   - In-memory override of `GENERAL/directory`
   - Added ``on_change_mode`` (``strict`` default / ``force_today`` override).
   - First session after changing the threshold is treated as “today”.
@@ -159,6 +159,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
