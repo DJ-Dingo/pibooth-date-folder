@@ -61,10 +61,12 @@ Setup in Pibooth Menu
 .. image:: docs/images/settings-menu.png
    :alt: Pibooth settings menu showing Date_folder entry
    :align: center
+   :width: 60%
 
 .. image:: docs/images/date-folder-menu.png
    :alt: Date_folder plugin settings screen
    :align: center
+   :width: 60%
 
 
 **Explanation of options:**
@@ -129,7 +131,7 @@ Given in your config::
 
 Changelog
 ---------
-- v1.5.0
+- v1.5.4
   - In-memory override of `GENERAL/directory`
   - Added ``on_change_mode`` (``strict`` default / ``force_today`` override).
   - First session after changing the threshold is treated as “today”.
@@ -157,6 +159,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
