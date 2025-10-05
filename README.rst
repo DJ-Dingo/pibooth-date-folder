@@ -6,6 +6,11 @@ pibooth-date-folder
 
 ``pibooth-date-folder`` is a plugin for the `pibooth`_ application.
 
+.. image:: docs/images/pibooth-date-folders.png
+   :alt: Pibooth image folders, when using this plugin
+   :align: center
+   :width: 50%
+
 It organizes photos into per-date folders with a configurable
 split time, supporting multiple quoted base directories.
 
@@ -141,6 +146,7 @@ Changelog
   - Works with multiple base directories
 
 - latest updates
+
   - In-memory override of `GENERAL/directory`
   - Added ``on_change_mode`` (``strict`` default / ``force_today`` override).
   - Keeps multiple quoted base paths and `~` prefix; writes to all.
@@ -167,6 +173,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
