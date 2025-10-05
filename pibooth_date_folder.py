@@ -1,11 +1,11 @@
-# pibooth_date_folder.py  —  v1.4.0
+# pibooth_date_folder.py  —  v1.5.0
 import os
 import re
 from datetime import datetime, timedelta
 import pibooth
 from pibooth.utils import LOGGER
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 
 # Cached bases:
 #  - display form (may start with '~'), no trailing slash
@@ -26,6 +26,49 @@ _CFG_FILE = os.path.expanduser("~/.config/pibooth/pibooth.cfg")
 
 
 # ---------- helpers ----------
+
+# --- v1.5: robust parsing for start_hour/start_minute ---
+def _parse_threshold(cfg_get, default_h=10, default_m=0):
+    """Read hour/minute from config and normalize to 0–23 / 0–59.
+    Treats 24 as 0 (midnight). Clamps minutes to 0–59.
+    """
+    # Read raw values
+    try:
+        h = int(cfg_get("DATE_FOLDER", "start_hour", fallback=default_h))
+    except Exception:
+        LOGGER.warning("Invalid start_hour in config; using default %d", default_h)
+        h = default_h
+
+    try:
+        m = int(cfg_get("DATE_FOLDER", "start_minute", fallback=default_m))
+    except Exception:
+        LOGGER.warning("Invalid start_minute in config; using default %d", default_m)
+        m = default_m
+
+    # remember original values before normalization
+    orig_h, orig_m = h, m
+    # Normalize hour
+    if h == 24:
+        h = 0
+    if h < 0:
+        h = 0
+    if h > 23:
+        h = 23
+
+    # Clamp minutes
+    if m < 0:
+        m = 0
+    if m > 59:
+        m = 59
+
+    # log if we normalized/clamped anything
+    if orig_h != h or orig_m != m:
+        LOGGER.info("Date-folder: normalized hour/min from %r:%r to %02d:%02d",
+                    orig_h, orig_m, h, m)
+    return h, m
+# --- end v1.5 helper ---
+
+
 def _split_paths(raw):
     out = []
     for item in raw.split(","):
@@ -155,11 +198,11 @@ def _write_directory_line_on_disk(disp_targets):
 @pibooth.hookimpl
 def pibooth_configure(cfg):
     """Register options and snapshot normalized bases."""
-    hours   = [str(h) for h in range(1, 25)]
+    hours   = [str(h) for h in range(0, 24)]
     minutes = [f"{m:02d}" for m in range(60)]
 
-    cfg.add_option('DATE_FOLDER', 'start_hour',   10,
-                   "Change the hour (1–24) when new date-folders start (Default = 10)",
+    cfg.add_option('DATE_FOLDER', 'start_hour',   '10',
+                   "Change the hour (0–23) when new date-folders start (Default = 10)",
                    "Start hour", hours)
     cfg.add_option('DATE_FOLDER', 'start_minute', '00',
                    "Change the minute (00–59) when new date-folders start (Default = 00)",
@@ -168,7 +211,7 @@ def pibooth_configure(cfg):
     # New behavior switch:
     cfg.add_option('DATE_FOLDER', 'on_change_mode', 'strict',
                    "Mode for how folder switching is handled: strict (default) or force_today",
-                   "On-change mode", ['force_today', 'strict'])
+                   "On-change mode", ['strict', 'force_today'])
 
     _load_bases(cfg)
 
@@ -178,10 +221,11 @@ def state_wait_enter(app):
     """
     Compute suffix and apply only when it actually changes.
     Modes:
-      - force_today (default): if you change the time, switch to today's folder immediately.
-      - strict:                if you change the time, obey before/after rule right away
-                               (i.e., before threshold -> yesterday, after -> today).
+      - strict (default):       if you change the time, obey before/after rule right away
+                                (i.e., before threshold -> yesterday, after -> today).
+      - force_today:            if you change the time, switch to today's folder immediately.
     """
+
     global _last_thr, _current_suffix, _last_disp_targets
 
     cfg = app._config
@@ -190,19 +234,14 @@ def state_wait_enter(app):
     if not _base_dirs_disp or not _base_dirs_abs:
         _load_bases(cfg)
 
-    # Read options
-    try:
-        h = int(cfg.gettyped('DATE_FOLDER', 'start_hour'))
-    except Exception:
-        LOGGER.warning("Invalid start_hour, defaulting to 10"); h = 10
-    try:
-        m = int(cfg.gettyped('DATE_FOLDER', 'start_minute'))
-    except Exception:
-        LOGGER.warning("Invalid start_minute, defaulting to 0"); m = 0
+    # Read options (normalized)
+    h, m = _parse_threshold(cfg.gettyped)
 
-    mode  = (cfg.get('DATE_FOLDER', 'on_change_mode') or 'force_today').strip().lower()
+
+    mode = (cfg.get('DATE_FOLDER', 'on_change_mode') or 'strict').strip().lower()
     if mode not in ('force_today', 'strict'):
-        mode = 'force_today'
+        mode = 'strict'
+
 
     thr    = f"{h:02d}-{m:02d}"
     thr_dt = now.replace(hour=h, minute=m, second=0, microsecond=0)
@@ -241,6 +280,7 @@ def state_wait_enter(app):
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
+
 
 
 
