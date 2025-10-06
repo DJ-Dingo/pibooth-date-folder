@@ -290,11 +290,13 @@ def state_wait_enter(app):
         LOGGER.info("Date-folder v%s: reusing '%s' (mode=%s)", __version__, new_suffix, mode)
         return
 
-    # Build targets, ensure they exist, set in-memory, sync to disk
+    # Build targets, ensure they exist, set in-memory (no CFG disk write)
     disp_targets = _build_disp_targets(new_suffix)
     _ensure_dirs_exist(disp_targets)
     quoted_in_mem = _set_in_memory(cfg, disp_targets)
-    _write_directory_line_on_disk(disp_targets)
+    # No _write_directory_line_on_disk → disabling plugin reverts immediately
+
+
 
 
     _current_suffix     = new_suffix
@@ -302,6 +304,7 @@ def state_wait_enter(app):
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
+
 
 
 
