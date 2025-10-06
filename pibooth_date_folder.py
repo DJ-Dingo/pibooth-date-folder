@@ -161,11 +161,21 @@ def _set_in_memory_to_bases(cfg):
 # ---------- hooks ----------
 
 @pibooth.hookimpl
+
+
+@pibooth.hookimpl
 def pibooth_startup(cfg, app):
-    # Persist newly-registered options so [DATE_FOLDER] is present immediately.
-    # This happens BEFORE state_wait_enter sets any dated directories.
+    """
+    Persist the newly-registered DATE_FOLDER options immediately
+    without ever saving a dated directory.
+    """
+    # Make sure GENERAL/directory is the original bases before saving
+    _load_bases(cfg)
+    _set_in_memory_to_bases(cfg)
+
     if hasattr(app, "config") and hasattr(app.config, "save"):
-        app.config.save()
+        app.config.save()   # writes only options (and base dirs), not the dated path
+
 
 @pibooth.hookimpl
 def pibooth_configure(cfg):
@@ -267,11 +277,16 @@ def state_wait_enter(app):
 
 
 
-@pibooth.hookimpl
+
+
+@pibooth.hookimpl(tryfirst=True)
 def pibooth_cleanup(app):
+    """
+    Restore the original base directories in-memory as the very first
+    cleanup step so nothing can save the dated path on exit.
+    """
     cfg = app._config
-    if not _base_dirs_disp or not _base_dirs_abs:
-        _load_bases(cfg)
+    _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
 
 
