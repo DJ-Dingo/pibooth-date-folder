@@ -208,16 +208,16 @@ def pibooth_startup(cfg, app):
                 try:
                     return _orig_config_save(*a, **k)
                 finally:
-                    # Efter gem: genskab dated dirs i memory hvis de var sat
-                    if _last_disp_targets:
+                    # Kun genskab dated directories hvis plugin stadig er slået TIL
+                    pm = getattr(app, "plugin_manager", None)
+                    enabled = pm and hasattr(pm, "is_plugin_enabled") and pm.is_plugin_enabled("pibooth_date_folder")
+                    if enabled and _last_disp_targets:
                         _set_in_memory(cfg, _last_disp_targets)
 
             app.config.save = _guarded_save
 
         # NU: persistér de registrerede options, så [DATE_FOLDER] oprettes straks
         app.config.save()
-
-
 
 
 
@@ -282,17 +282,19 @@ def state_wait_enter(app):
 
     pm = getattr(app, "plugin_manager", None)
     if pm and hasattr(pm, "is_plugin_enabled") and not pm.is_plugin_enabled("pibooth_date_folder"):
-        # Plugin OFF → revert to bases immediately (in-memory)
+        # Plugin OFF → revert to bases immediately
         _load_bases(cfg)
         _set_in_memory_to_bases(cfg)
     
-        # reset intern state så vi ikke vender tilbage til dated targets
-        global _current_suffix, _last_disp_targets
+        # Reset internal targets so nothing brings the dated path back
+        global _current_suffix, _last_disp_targets, _last_thr
         _current_suffix = None
         _last_disp_targets = None
+        _last_thr = None
     
         LOGGER.info("Date-folder disabled → reverted to base directories")
         return
+
 
 
 
@@ -361,6 +363,7 @@ def pibooth_cleanup(app):
     cfg = app._config
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
+
 
 
 
