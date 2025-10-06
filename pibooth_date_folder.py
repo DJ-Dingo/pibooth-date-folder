@@ -69,6 +69,11 @@ def _parse_threshold(cfg, default_h=10, default_m=0):
     return h, m
 # --- end v1.5 helper ---
 
+def _is_plugin_disabled(cfg) -> bool:
+    s = (cfg.get('GENERAL', 'plugins_disabled', fallback='') or '').lower()
+    # match both module and filename forms just in case
+    return ('pibooth_date_folder' in s) or ('pibooth_date_folder.py' in s)
+
 
 def _split_paths(raw: str):
     out, buf, q = [], [], None
@@ -184,42 +189,40 @@ def _set_in_memory_to_bases(cfg):
 
 
 # ---------- hooks ----------
+
+
+
 @pibooth.hookimpl(tryfirst=True)
 def pibooth_startup(cfg, app):
     """
-    1) Skriv [DATE_FOLDER] på første start.
-    2) Forhindre at dated directory nogensinde bliver gemt i pibooth.cfg.
+    1) Write [DATE_FOLDER] on first start.
+    2) Prevent the dated directory from ever being written to pibooth.cfg.
     """
     global _orig_config_save
 
-    # Inden nogen gemmer: skift in-memory tilbage til base dirs
+    # Before any save happens: switch in-memory back to base dirs
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
 
     if hasattr(app, "config") and hasattr(app.config, "save"):
-        # Wrap ALLE fremtidige gemninger, så de altid gemmer base-dirs (aldrig dated)
+        # Wrap ALL future saves so they always persist base dirs (never dated)
         if _orig_config_save is None:
             _orig_config_save = app.config.save
 
             def _guarded_save(*a, **k):
-                # Tving base-dirs ind i memory lige før gem
                 _load_bases(cfg)
                 _set_in_memory_to_bases(cfg)
                 try:
                     return _orig_config_save(*a, **k)
                 finally:
-                    # Kun genskab dated directories hvis plugin stadig er slået TIL
-                    pm = getattr(app, "plugin_manager", None)
-                    enabled = pm and hasattr(pm, "is_plugin_enabled") and pm.is_plugin_enabled("pibooth_date_folder")
-                    if enabled and _last_disp_targets:
+                    # Only restore dated directories if the plugin is enabled
+                    if (not _is_plugin_disabled(cfg)) and _last_disp_targets:
                         _set_in_memory(cfg, _last_disp_targets)
 
             app.config.save = _guarded_save
 
-        # NU: persistér de registrerede options, så [DATE_FOLDER] oprettes straks
+        # Persist newly registered options so [DATE_FOLDER] is created immediately
         app.config.save()
-
-
 
 
 @pibooth.hookimpl
@@ -254,34 +257,11 @@ def pibooth_configure(cfg):
             try:
                 return _orig_cfg_save(*a, **k)
             finally:
-                if _last_disp_targets:
+                # only restore dated dirs in memory if plugin is enabled
+                if (not _is_plugin_disabled(cfg)) and _last_disp_targets:
                     _set_in_memory(cfg, _last_disp_targets)
 
-        cfg.save = _guarded_cfg_save
 
-    # persist newly registered options NOW → [DATE_FOLDER] exists immediately
-    if hasattr(cfg, "save"):
-        cfg.save()
-
-    pm = getattr(cfg, "plugin_manager", None)
-    if pm and hasattr(pm, "is_plugin_enabled") and not pm.is_plugin_enabled("pibooth_date_folder"):
-        # plugin disabled → reset everything now so menu save writes base dirs only
-        _load_bases(cfg)
-        _set_in_memory_to_bases(cfg)
-        global _current_suffix, _last_disp_targets, _last_thr
-        _current_suffix = None
-        _last_disp_targets = None
-        _last_thr = None
-
-    # Hvis plugin er slået fra i menuen → fjern vores hooks fra manageren
-    if pm and not pm.is_plugin_enabled("pibooth_date_folder"):
-        hooks = getattr(pm, "hook", None)
-        if hooks and hasattr(hooks, "pibooth"):  # defensive
-            # Fjern vores state_wait_enter-hook så den ikke bliver kørt igen før reload
-            try:
-                hooks.pibooth.unregister(state_wait_enter)
-            except Exception:
-                pass
 
 @pibooth.hookimpl
 def state_wait_enter(app):
@@ -298,20 +278,19 @@ def state_wait_enter(app):
     cfg = app._config
     now = datetime.now()
 
-    pm = getattr(app, "plugin_manager", None)
-    if pm and hasattr(pm, "is_plugin_enabled") and not pm.is_plugin_enabled("pibooth_date_folder"):
-        # Plugin OFF → revert to bases immediately
+    # Plugin disabled via Manage Plugins? -> immediately revert to base dirs
+    if _is_plugin_disabled(cfg):
         _load_bases(cfg)
         _set_in_memory_to_bases(cfg)
-    
-        # Reset internal targets so nothing brings the dated path back
+
         global _current_suffix, _last_disp_targets, _last_thr
         _current_suffix = None
         _last_disp_targets = None
         _last_thr = None
-    
+
         LOGGER.info("Date-folder disabled → reverted to base directories")
         return
+
 
 
 
@@ -368,6 +347,10 @@ def state_wait_enter(app):
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
 
 
+
+
+
+
 @pibooth.hookimpl(tryfirst=True)
 def pibooth_cleanup(app):
     """
@@ -377,5 +360,10 @@ def pibooth_cleanup(app):
     cfg = app._config
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
+
+
+
+
+
 
 
