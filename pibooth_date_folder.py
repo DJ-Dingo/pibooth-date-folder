@@ -98,8 +98,13 @@ def _canon_abs(disp_path):
 
 
 def _normalize_bases_from_general(cfg):
-    """Read GENERAL/directory (may already be dated) and return base paths (display & abs), deduped."""
-    raw = cfg.get('GENERAL', 'directory')
+    """Read GENERAL/directory (may already be dated) and return base paths (display & abs), deduped.
+    No hardcoded fallbacks. If empty/missing, we leave bases empty and do nothing later.
+    """
+    raw = cfg.get('GENERAL', 'directory', fallback='').strip()
+    if not raw:
+        return [], []  # nothing set, don't guess
+
     items = _split_paths(raw)
 
     disp_list, abs_list, seen = [], [], set()
@@ -112,10 +117,8 @@ def _normalize_bases_from_general(cfg):
         disp_list.append(disp_base)
         abs_list.append(abs_base)
 
-    if not disp_list:
-        disp_list = ["~/Pictures/pibooth"]
-        abs_list  = [_canon_abs(disp_list[0])]
     return disp_list, abs_list
+
 
 def _load_bases(cfg):
     global _base_dirs_disp, _base_dirs_abs
@@ -148,13 +151,11 @@ def _set_in_memory(cfg, disp_targets):
     return quoted
 
 def _set_in_memory_to_bases(cfg):
+    if not _base_dirs_disp:
+        return  # no bases → do nothing
     quoted = ', '.join(f'"{d}"' for d in _base_dirs_disp)
     cfg.set('GENERAL', 'directory', quoted)
     return quoted
-
-
-
-
 
 
 # ---------- hooks ----------
@@ -270,3 +271,4 @@ def pibooth_cleanup(app):
     if not _base_dirs_disp or not _base_dirs_abs:
         _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
+
