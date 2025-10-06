@@ -22,8 +22,6 @@ _last_disp_targets = None
 # Detect our own suffix
 _SUFFIX_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_start-hour_\d{2}-\d{2}$")
 
-# User config path
-_CFG_FILE = os.path.expanduser("~/.config/pibooth/pibooth.cfg")
 
 
 # ---------- helpers ----------
@@ -128,7 +126,7 @@ def _build_disp_targets(suffix):
     """Join display bases with suffix (preserve '~' in what we write)."""
     targets = []
     for disp in _base_dirs_disp:
-        # behold display-formen (kan starte med '~')
+        # keep display form (may start with '~')
         disp_clean = disp.rstrip("/")
         targets.append(f"{disp_clean}/{suffix}")
     return targets
@@ -149,23 +147,11 @@ def _set_in_memory(cfg, disp_targets):
     cfg.set('GENERAL', 'directory', quoted)
     return quoted
 
-def _read_current_directory_line():
-    try:
-        with open(_CFG_FILE, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-    except Exception:
-        return ""
-    in_general = False
-    for line in lines:
-        s = line.strip()
-        if s.startswith('[') and s.endswith(']'):
-            in_general = (s.upper() == '[GENERAL]')
-            continue
-        if in_general and '=' in s:
-            key = s.split('=', 1)[0].strip().lower()
-            if key == 'directory':
-                return s.split('=', 1)[1].strip()
-    return ""
+def _set_in_memory_to_bases(cfg):
+    quoted = ', '.join(f'"{d}"' for d in _base_dirs_disp)
+    cfg.set('GENERAL', 'directory', quoted)
+    return quoted
+
 
 
 
@@ -190,6 +176,7 @@ def pibooth_configure(cfg):
                    "On-change mode", ['strict', 'force_today'])
 
     _load_bases(cfg)
+    _set_in_memory_to_bases(cfg)
 
 
 @pibooth.hookimpl
@@ -206,6 +193,15 @@ def state_wait_enter(app):
 
     cfg = app._config
     now = datetime.now()
+
+    pm = getattr(app, "plugin_manager", None)
+    if pm and hasattr(pm, "is_plugin_enabled") and not pm.is_plugin_enabled("pibooth_date_folder"):
+        if not _base_dirs_disp or not _base_dirs_abs:
+            _load_bases(cfg)
+        _set_in_memory_to_bases(cfg)
+        LOGGER.info("Date-folder disabled → keeping default directories (in memory only)")
+        return
+
 
     if not _base_dirs_disp or not _base_dirs_abs:
         _load_bases(cfg)
@@ -261,6 +257,21 @@ def state_wait_enter(app):
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
 
+
+@pibooth.hookimpl
+def state_wait_exit(app):
+    cfg = app._config
+    if not _base_dirs_disp or not _base_dirs_abs:
+        _load_bases(cfg)
+    _set_in_memory_to_bases(cfg)
+
+
+@pibooth.hookimpl
+def pibooth_cleanup(app):
+    cfg = app._config
+    if not _base_dirs_disp or not _base_dirs_abs:
+        _load_bases(cfg)
+    _set_in_memory_to_bases(cfg)
 
 
 
