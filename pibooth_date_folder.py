@@ -264,8 +264,8 @@ def state_wait_enter(app):
     """
     Compute suffix and apply only when it actually changes.
     Modes:
-      - strict (default):       before threshold -> yesterday, after -> today.
-      - force_today:            always switch to today's folder immediately.
+      - strict (default): before threshold -> yesterday, after -> today.
+      - force_today:      always switch to today's folder immediately.
     """
     global _last_thr, _current_suffix, _last_disp_targets
 
@@ -276,7 +276,6 @@ def state_wait_enter(app):
     if _is_plugin_disabled(cfg):
         _load_bases(cfg)
         _set_in_memory_to_bases(cfg)
-        global _last_thr  # already declared above, just being explicit
         _current_suffix = None
         _last_disp_targets = None
         _last_thr = None
@@ -297,15 +296,18 @@ def state_wait_enter(app):
     thr_dt = now.replace(hour=h, minute=m, second=0, microsecond=0)
 
     def before_after_rule():
+        # < threshold = yesterday, ≥ threshold = today
         return (now - timedelta(days=1)).date() if now < thr_dt else now.date()
 
-    # Decide effective date
-    if _last_thr is None:
+    # Strict mode: always apply before/after rule
+    if mode == 'strict':
         effective = before_after_rule()
-    elif thr != _last_thr:
-        effective = before_after_rule() if mode == 'strict' else now.date()
     else:
-        effective = before_after_rule()
+        # force_today mode: if threshold changed, force today, else normal rule
+        if _last_thr is None or thr != _last_thr:
+            effective = now.date()
+        else:
+            effective = before_after_rule()
 
     _last_thr = thr
     new_suffix = f"{effective.strftime('%Y-%m-%d')}_start-hour_{thr}"
@@ -326,7 +328,6 @@ def state_wait_enter(app):
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
-
 
 
 
