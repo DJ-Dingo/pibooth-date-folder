@@ -161,28 +161,25 @@ You may also remove the entire ``[DATE_FOLDER]`` section if you wish.
 Changelog
 ---------
 - v1.5.7
+  🎉 Re-release of the pibooth-date-folder plugin.
 
-  🎉 re-release of the pibooth-date-folder plugin.
-   
   - Automatically organizes photos into date-based folders  
   - Configurable daily switch time  
   - Works with multiple base directories
-
-- latest updates
-- v1.5.7
-  - Changed behavior to no longer write dated directories into the config file.
-  - When disabled via Pibooth menu, the plugin now temporarily reverts to the default directories in memory only (no cfg write).
-  - Improved folder creation to be idempotent and avoid duplicate entries.
-  - Direct link to images for use for PyPi 
+  -
+  - Changed behavior to no longer write dated directories into the config file
+  - When disabled via Pibooth menu, the plugin now temporarily reverts to the default directories in memory only (no cfg write)
+  - Improved folder creation to be idempotent and avoid duplicate entries
+  - 
   - Normalize base/target paths to ensure existing folders are reused
   - Add safe directory creation with exist_ok=True
   - Update README image links to raw URLs for PyPI rendering
   - In-memory override of `GENERAL/directory`
-  - Added ``on_change_mode`` (``strict`` default / ``force_today`` override).
-  - Keeps multiple quoted base paths and `~` prefix; writes to all.
-  - Switched hour range to 0–23 (UI/docs) for clarity.
-  - Legacy value 24 is treated as 00 (midnight) internally.
-  - Clamps minutes to 0–59 for robustness.
+  - Added ``on_change_mode`` (``strict`` default / ``force_today`` override)
+  - Keeps multiple quoted base paths and `~` prefix
+  - Switched hour range to 0–23 (UI/docs) for clarity
+  - Legacy value 24 is treated as 00 (midnight) internally
+  - Clamps minutes to 0–59 for robustness
 
 
 License
@@ -203,6 +200,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
