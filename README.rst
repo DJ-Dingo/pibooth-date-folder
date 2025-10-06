@@ -137,16 +137,20 @@ Given in your config::
 
 Changelog
 ---------
-- v1.5.6
+- v1.5.7
 
-  🎉 Initial release of the pibooth-date-folder plugin.
 
+  🎉 re-release of the pibooth-date-folder plugin.
+   
   - Automatically organizes photos into date-based folders  
   - Configurable daily switch time  
   - Works with multiple base directories
 
 - latest updates
 
+  - Normalize base/target paths to ensure existing folders are reused
+  - Add safe directory creation with exist_ok=True
+  - Update README image links to raw URLs for PyPI rendering
   - In-memory override of `GENERAL/directory`
   - Added ``on_change_mode`` (``strict`` default / ``force_today`` override).
   - Keeps multiple quoted base paths and `~` prefix; writes to all.
@@ -173,6 +177,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
