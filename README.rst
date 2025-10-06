@@ -161,6 +161,7 @@ You may also remove the entire ``[DATE_FOLDER]`` section if you wish.
 Changelog
 ---------
 - v1.5.7
+
   🎉 Re-release of the pibooth-date-folder plugin.
 
   - Automatically organizes photos into date-based folders  
@@ -200,6 +201,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
