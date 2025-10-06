@@ -101,7 +101,7 @@ Usage
 
 
    - under each of your original base directories.  
-   - Overrides PiBooth’s in-memory `directory` to the quoted list of these new folders, writing into **all** of them.
+   - Overrides PiBooth’s in-memory directory to the quoted list of these new folders (no cfg write).
 
    Note: When the plugin is disabled in the Pibooth menu, it temporarily reverts
    to the default ``~/Pictures/pibooth`` directories in memory only (no cfg write).
@@ -162,7 +162,6 @@ Changelog
 ---------
 - v1.5.7
 
-
   🎉 re-release of the pibooth-date-folder plugin.
    
   - Automatically organizes photos into date-based folders  
@@ -170,7 +169,11 @@ Changelog
   - Works with multiple base directories
 
 - latest updates
-
+- v1.5.7
+  - Changed behavior to no longer write dated directories into the config file.
+  - When disabled via Pibooth menu, the plugin now temporarily reverts to the default directories in memory only (no cfg write).
+  - Improved folder creation to be idempotent and avoid duplicate entries.
+  - Direct link to images for use for PyPi 
   - Normalize base/target paths to ensure existing folders are reused
   - Add safe directory creation with exist_ok=True
   - Update README image links to raw URLs for PyPI rendering
@@ -200,6 +203,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
