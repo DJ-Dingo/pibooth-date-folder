@@ -29,19 +29,19 @@ _CFG_FILE = os.path.expanduser("~/.config/pibooth/pibooth.cfg")
 # ---------- helpers ----------
 
 # --- v1.5: robust parsing for start_hour/start_minute ---
-def _parse_threshold(cfg_get, default_h=10, default_m=0):
+def _parse_threshold(cfg, default_h=10, default_m=0):
     """Read hour/minute from config and normalize to 0–23 / 0–59.
     Treats 24 as 0 (midnight). Clamps minutes to 0–59.
     """
     # Read raw values
     try:
-        h = int(cfg_get("DATE_FOLDER", "start_hour", fallback=default_h))
+        h = cfg.getint("DATE_FOLDER", "start_hour", fallback=default_h)
     except Exception:
         LOGGER.warning("Invalid start_hour in config; using default %d", default_h)
         h = default_h
 
     try:
-        m = int(cfg_get("DATE_FOLDER", "start_minute", fallback=default_m))
+        m = cfg.getint("DATE_FOLDER", "start_minute", fallback=default_m)
     except Exception:
         LOGGER.warning("Invalid start_minute in config; using default %d", default_m)
         m = default_m
@@ -254,7 +254,7 @@ def state_wait_enter(app):
         _load_bases(cfg)
 
     # Read options (normalized)
-    h, m = _parse_threshold(cfg.gettyped)
+    h, m = _parse_threshold(cfg)
 
 
     mode = (cfg.get('DATE_FOLDER', 'on_change_mode') or 'strict').strip().lower()
@@ -301,6 +301,7 @@ def state_wait_enter(app):
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
+
 
 
 
