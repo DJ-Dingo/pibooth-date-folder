@@ -159,6 +159,14 @@ def _set_in_memory_to_bases(cfg):
 
 
 # ---------- hooks ----------
+
+@pibooth.hookimpl
+def pibooth_startup(cfg, app):
+    # Persist newly-registered options so [DATE_FOLDER] is present immediately.
+    # This happens BEFORE state_wait_enter sets any dated directories.
+    if hasattr(app, "config") and hasattr(app.config, "save"):
+        app.config.save()
+
 @pibooth.hookimpl
 def pibooth_configure(cfg):
     """Register options and snapshot normalized bases."""
@@ -257,12 +265,6 @@ def state_wait_enter(app):
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
 
 
-@pibooth.hookimpl
-def state_wait_exit(app):
-    cfg = app._config
-    if not _base_dirs_disp or not _base_dirs_abs:
-        _load_bases(cfg)
-    _set_in_memory_to_bases(cfg)
 
 
 @pibooth.hookimpl
@@ -271,4 +273,5 @@ def pibooth_cleanup(app):
     if not _base_dirs_disp or not _base_dirs_abs:
         _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
+
 
