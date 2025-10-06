@@ -18,7 +18,6 @@ _base_dirs_abs  = None
 _last_thr = None
 _current_suffix = None
 _last_disp_targets = None
-_orig_config_save = None
 _orig_cfg_save = None
 
 # Detect our own suffix
@@ -73,6 +72,7 @@ def _is_plugin_disabled(cfg) -> bool:
     s = (cfg.get('GENERAL', 'plugins_disabled', fallback='') or '').lower()
     # match both module and filename forms just in case
     return ('pibooth_date_folder' in s) or ('pibooth_date_folder.py' in s)
+
 
 
 def _split_paths(raw: str):
@@ -195,34 +195,16 @@ def _set_in_memory_to_bases(cfg):
 @pibooth.hookimpl(tryfirst=True)
 def pibooth_startup(cfg, app):
     """
-    1) Write [DATE_FOLDER] on first start.
-    2) Prevent the dated directory from ever being written to pibooth.cfg.
+    Ensure [DATE_FOLDER] section exists right after startup.
+    No guarded save logic here — that's handled in configure().
     """
-    global _orig_config_save
-
-    # Before any save happens: switch in-memory back to base dirs
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
 
-    if hasattr(app, "config") and hasattr(app.config, "save"):
-        # Wrap ALL future saves so they always persist base dirs (never dated)
-        if _orig_config_save is None:
-            _orig_config_save = app.config.save
+    # Persist the newly registered options so [DATE_FOLDER] exists immediately
+    if hasattr(cfg, "save"):
+        cfg.save()
 
-            def _guarded_save(*a, **k):
-                _load_bases(cfg)
-                _set_in_memory_to_bases(cfg)
-                try:
-                    return _orig_config_save(*a, **k)
-                finally:
-                    # Only restore dated directories if the plugin is enabled
-                    if (not _is_plugin_disabled(cfg)) and _last_disp_targets:
-                        _set_in_memory(cfg, _last_disp_targets)
-
-            app.config.save = _guarded_save
-
-        # Persist newly registered options so [DATE_FOLDER] is created immediately
-        app.config.save()
 
 
 @pibooth.hookimpl
@@ -261,6 +243,20 @@ def pibooth_configure(cfg):
                 if (not _is_plugin_disabled(cfg)) and _last_disp_targets:
                     _set_in_memory(cfg, _last_disp_targets)
 
+        cfg.save = _guarded_cfg_save
+
+    # persist newly registered options now → ensures [DATE_FOLDER] exists on first run
+    if hasattr(cfg, "save"):
+        cfg.save()
+
+    # if disabled in menu → immediately revert to base dirs and clear state
+    if _is_plugin_disabled(cfg):
+        _load_bases(cfg)
+        _set_in_memory_to_bases(cfg)
+        global _current_suffix, _last_disp_targets, _last_thr
+        _current_suffix = None
+        _last_disp_targets = None
+        _last_thr = None
 
 
 @pibooth.hookimpl
@@ -268,32 +264,24 @@ def state_wait_enter(app):
     """
     Compute suffix and apply only when it actually changes.
     Modes:
-      - strict (default):       if you change the time, obey before/after rule right away
-                                (i.e., before threshold -> yesterday, after -> today).
-      - force_today:            if you change the time, switch to today's folder immediately.
+      - strict (default):       before threshold -> yesterday, after -> today.
+      - force_today:            always switch to today's folder immediately.
     """
-
     global _last_thr, _current_suffix, _last_disp_targets
 
     cfg = app._config
     now = datetime.now()
 
-    # Plugin disabled via Manage Plugins? -> immediately revert to base dirs
+    # Disabled via menu? → revert to base dirs immediately and keep them
     if _is_plugin_disabled(cfg):
         _load_bases(cfg)
         _set_in_memory_to_bases(cfg)
-
-        global _current_suffix, _last_disp_targets, _last_thr
+        global _last_thr  # already declared above, just being explicit
         _current_suffix = None
         _last_disp_targets = None
         _last_thr = None
-
         LOGGER.info("Date-folder disabled → reverted to base directories")
         return
-
-
-
-
 
     if not _base_dirs_disp or not _base_dirs_abs:
         _load_bases(cfg)
@@ -301,11 +289,9 @@ def state_wait_enter(app):
     # Read options (normalized)
     h, m = _parse_threshold(cfg)
 
-
     mode = (cfg.get('DATE_FOLDER', 'on_change_mode') or 'strict').strip().lower()
     if mode not in ('force_today', 'strict'):
         mode = 'strict'
-
 
     thr    = f"{h:02d}-{m:02d}"
     thr_dt = now.replace(hour=h, minute=m, second=0, microsecond=0)
@@ -315,17 +301,13 @@ def state_wait_enter(app):
 
     # Decide effective date
     if _last_thr is None:
-        # first run this session → normal before/after rule
         effective = before_after_rule()
     elif thr != _last_thr:
-        # time changed by user
         effective = before_after_rule() if mode == 'strict' else now.date()
     else:
-        # normal loop
         effective = before_after_rule()
 
     _last_thr = thr
-
     new_suffix = f"{effective.strftime('%Y-%m-%d')}_start-hour_{thr}"
 
     # If suffix unchanged, keep using current targets; do not touch disk
@@ -338,15 +320,12 @@ def state_wait_enter(app):
     disp_targets = _build_disp_targets(new_suffix)
     _ensure_dirs_exist(disp_targets)
     quoted_in_mem = _set_in_memory(cfg, disp_targets)
-    # No _write_directory_line_on_disk → disabling plugin reverts immediately
-    
+
     _current_suffix     = new_suffix
     _last_disp_targets  = disp_targets
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
-
-
 
 
 
