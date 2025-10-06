@@ -19,6 +19,7 @@ _last_thr = None
 _current_suffix = None
 _last_disp_targets = None
 _orig_config_save = None
+_orig_cfg_save = None
 
 # Detect our own suffix
 _SUFFIX_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_start-hour_\d{2}-\d{2}$")
@@ -195,9 +196,14 @@ def pibooth_startup(cfg, app):
 
 
 
+
+
+
 @pibooth.hookimpl
 def pibooth_configure(cfg):
     """Register options and snapshot normalized bases."""
+    global _orig_cfg_save
+
     hours   = [str(h) for h in range(0, 24)]
     minutes = [f"{m:02d}" for m in range(60)]
 
@@ -207,14 +213,33 @@ def pibooth_configure(cfg):
     cfg.add_option('DATE_FOLDER', 'start_minute', '00',
                    "Change the minute (00–59) when new date-folders start (Default = 00)",
                    "Start minute", minutes)
-
-    # New behavior switch:
     cfg.add_option('DATE_FOLDER', 'on_change_mode', 'strict',
                    "Mode for how folder switching is handled: strict (default) or force_today",
                    "On-change mode", ['strict', 'force_today'])
 
+    # snapshot bases (no dated suffix in memory)
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
+
+    # guard ALL future cfg.save() calls so they always save base dirs (never dated)
+    if hasattr(cfg, "save") and _orig_cfg_save is None:
+        _orig_cfg_save = cfg.save
+
+        def _guarded_cfg_save(*a, **k):
+            _load_bases(cfg)
+            _set_in_memory_to_bases(cfg)
+            try:
+                return _orig_cfg_save(*a, **k)
+            finally:
+                if _last_disp_targets:
+                    _set_in_memory(cfg, _last_disp_targets)
+
+        cfg.save = _guarded_cfg_save
+
+    # persist newly registered options NOW → [DATE_FOLDER] exists immediately
+    if hasattr(cfg, "save"):
+        cfg.save()
+
 
 
 @pibooth.hookimpl
@@ -306,6 +331,7 @@ def pibooth_cleanup(app):
     cfg = app._config
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
+
 
 
 
