@@ -70,16 +70,39 @@ def _parse_threshold(cfg, default_h=10, default_m=0):
 # --- end v1.5 helper ---
 
 
-def _split_paths(raw):
-    out = []
-    for item in raw.split(","):
-        s = item.strip()
-        if not s:
-            continue
-        if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
-            s = s[1:-1]
-        out.append(s.strip())
-    return out
+def _split_paths(raw: str):
+    out, buf, q = [], [], None
+    i, n = 0, len(raw)
+    while i < n:
+        c = raw[i]
+        if q:  # inside quotes
+            if c == "\\" and i + 1 < n:
+                buf.append(raw[i+1]); i += 2; continue
+            if c == q:
+                q = None; i += 1; continue
+            buf.append(c); i += 1; continue
+        # outside quotes
+        if c in ("'", '"'):
+            q = c; i += 1; continue
+        if c == ",":
+            s = "".join(buf).strip()
+            if s:
+                out.append(s)
+            buf = []; i += 1; continue
+        buf.append(c); i += 1
+    # flush
+    s = "".join(buf).strip()
+    if s:
+        out.append(s)
+    # strip outer quotes if present
+    cleaned = []
+    for s in out:
+        if (len(s) >= 2) and ((s[0] == s[-1]) and s[0] in ("'", '"')):
+            cleaned.append(s[1:-1].strip())
+        else:
+            cleaned.append(s)
+    return cleaned
+
 
 def _strip_suffix_until_base(path):
     p = path.rstrip("/ ")
@@ -154,8 +177,8 @@ def _set_in_memory(cfg, disp_targets):
 
 def _set_in_memory_to_bases(cfg):
     if not _base_dirs_disp:
-        return  # no bases → do nothing
-    quoted = ', '.join(f'"{d}"' for d in _base_dirs_disp)
+        return
+    quoted = ', '.join(f'"{d.rstrip("/")}"' for d in _base_dirs_disp)
     cfg.set('GENERAL', 'directory', quoted)
     return quoted
 
@@ -259,11 +282,18 @@ def state_wait_enter(app):
 
     pm = getattr(app, "plugin_manager", None)
     if pm and hasattr(pm, "is_plugin_enabled") and not pm.is_plugin_enabled("pibooth_date_folder"):
-        if not _base_dirs_disp or not _base_dirs_abs:
-            _load_bases(cfg)
+        # Plugin OFF → revert to bases immediately (in-memory)
+        _load_bases(cfg)
         _set_in_memory_to_bases(cfg)
-        LOGGER.info("Date-folder disabled → keeping default directories (in memory only)")
+    
+        # reset intern state så vi ikke vender tilbage til dated targets
+        global _current_suffix, _last_disp_targets
+        _current_suffix = None
+        _last_disp_targets = None
+    
+        LOGGER.info("Date-folder disabled → reverted to base directories")
         return
+
 
 
     if not _base_dirs_disp or not _base_dirs_abs:
@@ -331,6 +361,7 @@ def pibooth_cleanup(app):
     cfg = app._config
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
+
 
 
 
