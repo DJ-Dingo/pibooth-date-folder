@@ -273,6 +273,15 @@ def pibooth_configure(cfg):
         _last_disp_targets = None
         _last_thr = None
 
+    # Hvis plugin er slået fra i menuen → fjern vores hooks fra manageren
+    if pm and not pm.is_plugin_enabled("pibooth_date_folder"):
+        hooks = getattr(pm, "hook", None)
+        if hooks and hasattr(hooks, "pibooth"):  # defensive
+            # Fjern vores state_wait_enter-hook så den ikke bliver kørt igen før reload
+            try:
+                hooks.pibooth.unregister(state_wait_enter)
+            except Exception:
+                pass
 
 @pibooth.hookimpl
 def state_wait_enter(app):
