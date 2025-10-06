@@ -125,22 +125,23 @@ def _load_bases(cfg):
     LOGGER.info("Date-folder v%s: bases = %r", __version__, _base_dirs_disp)
 
 def _build_disp_targets(suffix):
-    """Join display bases with suffix (normalized, no trailing slash)."""
+    """Join display bases with suffix (preserve '~' in what we write)."""
     targets = []
     for disp in _base_dirs_disp:
-        # keep the display '~' form for writing back to config,
-        # but build/compare using a normalized join so we don't double-slash
-        joined = Path(os.path.expanduser(disp)).joinpath(suffix)
-        targets.append(str(joined).replace("//", "/"))
+        # behold display-formen (kan starte med '~')
+        disp_clean = disp.rstrip("/")
+        targets.append(f"{disp_clean}/{suffix}")
     return targets
 
+
 def _ensure_dirs_exist(disp_targets):
-    """Create target folders if missing (idempotent)."""
+    """Create target folders if missing, expanding '~' only for the filesystem."""
     for t in disp_targets:
         try:
-            Path(t).mkdir(parents=True, exist_ok=True)
+            Path(os.path.expanduser(t)).mkdir(parents=True, exist_ok=True)
         except Exception as e:
             LOGGER.warning("Date-folder: cannot create %s: %s", t, e)
+
 
 
 def _set_in_memory(cfg, disp_targets):
@@ -301,6 +302,7 @@ def state_wait_enter(app):
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
+
 
 
 
