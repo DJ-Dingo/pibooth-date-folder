@@ -103,6 +103,11 @@ Usage
    - under each of your original base directories.  
    - Overrides PiBooth’s in-memory `directory` to the quoted list of these new folders, writing into **all** of them.
 
+   Note: When the plugin is disabled in the Pibooth menu, it temporarily reverts
+   to the default ``~/Pictures/pibooth`` directories in memory only (no cfg write).
+
+
+
 Testing the Threshold
 ---------------------
 To simulate a day-boundary without waiting 24 hours:
@@ -133,6 +138,24 @@ Given in your config::
 
 
       "~/Pictures/pibooth/2025-07-12_start-hour_10-00", "~/Pictures/backup_booth/2025-07-12_start-hour_10-00"
+
+
+
+
+Uninstall
+---------
+On current versions (v1.5.7+), the plugin does not write date folders to
+``pibooth.cfg``—so uninstalling typically requires no changes.
+
+If you previously used an older version that wrote a dated path to the config,
+open ``~/.config/pibooth/pibooth.cfg`` and reset:
+
+::
+
+    [GENERAL]
+    directory = "~/Pictures/pibooth"
+
+You may also remove the entire ``[DATE_FOLDER]`` section if you wish.
 
 
 Changelog
@@ -177,6 +200,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
