@@ -160,35 +160,39 @@ def _set_in_memory_to_bases(cfg):
 
 
 # ---------- hooks ----------
-@pibooth.hookimpl
+@pibooth.hookimpl(tryfirst=True)
 def pibooth_startup(cfg, app):
     """
-    1) Make [DATE_FOLDER] appear immediately.
-    2) Guard ANY future config.save() so the dated directory is never written.
+    1) Skriv [DATE_FOLDER] på første start.
+    2) Forhindre at dated directory nogensinde bliver gemt i pibooth.cfg.
     """
     global _orig_config_save
 
-    # Guard all future saves (from Pibooth or other plugins)
-    if hasattr(app, "config") and hasattr(app.config, "save") and _orig_config_save is None:
-        _orig_config_save = app.config.save
+    # Inden nogen gemmer: skift in-memory tilbage til base dirs
+    _load_bases(cfg)
+    _set_in_memory_to_bases(cfg)
 
-        def _guarded_save(*a, **k):
-            # Always temporarily switch back to base dirs before saving
-            if not _base_dirs_disp or not _base_dirs_abs:
-                _load_bases(cfg)
-            _set_in_memory_to_bases(cfg)
-            try:
-                return _orig_config_save(*a, **k)
-            finally:
-                # Restore dated targets in memory if already applied
-                if _last_disp_targets:
-                    _set_in_memory(cfg, _last_disp_targets)
-
-        app.config.save = _guarded_save
-
-    # Persist newly-registered options so [DATE_FOLDER] is created on first run
     if hasattr(app, "config") and hasattr(app.config, "save"):
+        # Wrap ALLE fremtidige gemninger, så de altid gemmer base-dirs (aldrig dated)
+        if _orig_config_save is None:
+            _orig_config_save = app.config.save
+
+            def _guarded_save(*a, **k):
+                # Tving base-dirs ind i memory lige før gem
+                _load_bases(cfg)
+                _set_in_memory_to_bases(cfg)
+                try:
+                    return _orig_config_save(*a, **k)
+                finally:
+                    # Efter gem: genskab dated dirs i memory hvis de var sat
+                    if _last_disp_targets:
+                        _set_in_memory(cfg, _last_disp_targets)
+
+            app.config.save = _guarded_save
+
+        # NU: persistér de registrerede options, så [DATE_FOLDER] oprettes straks
         app.config.save()
+
 
 
 @pibooth.hookimpl
@@ -302,6 +306,7 @@ def pibooth_cleanup(app):
     cfg = app._config
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
+
 
 
 
