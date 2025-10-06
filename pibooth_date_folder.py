@@ -192,23 +192,23 @@ def pibooth_startup(cfg, app):
     """
     global _orig_config_save
 
-# Before any save happens: switch in-memory back to base dirs
+    # Inden nogen gemmer: skift in-memory tilbage til base dirs
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
 
     if hasattr(app, "config") and hasattr(app.config, "save"):
-# Wrap ALL future saves so they always persist base-dirs (never dated)
+        # Wrap ALLE fremtidige gemninger, så de altid gemmer base-dirs (aldrig dated)
         if _orig_config_save is None:
             _orig_config_save = app.config.save
 
             def _guarded_save(*a, **k):
-# Force base-dirs in memory just before saving
+                # Tving base-dirs ind i memory lige før gem
                 _load_bases(cfg)
                 _set_in_memory_to_bases(cfg)
                 try:
                     return _orig_config_save(*a, **k)
                 finally:
-# Only restore dated directories in memory if the plugin is still ENABLED
+                    # Kun genskab dated directories hvis plugin stadig er slået TIL
                     pm = getattr(app, "plugin_manager", None)
                     enabled = pm and hasattr(pm, "is_plugin_enabled") and pm.is_plugin_enabled("pibooth_date_folder")
                     if enabled and _last_disp_targets:
@@ -216,13 +216,12 @@ def pibooth_startup(cfg, app):
 
             app.config.save = _guarded_save
 
-# Persist the newly registered options so [DATE_FOLDER] is created on first run
+        # NU: persistér de registrerede options, så [DATE_FOLDER] oprettes straks
         app.config.save()
 
 
 
 
-# REPLACE your entire pibooth_configure() with this
 @pibooth.hookimpl
 def pibooth_configure(cfg):
     """Register options and snapshot normalized bases."""
@@ -241,25 +240,38 @@ def pibooth_configure(cfg):
                    "Mode for how folder switching is handled: strict (default) or force_today",
                    "On-change mode", ['strict', 'force_today'])
 
+    # snapshot bases (no dated suffix in memory)
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
 
-    # Guard cfg.save() (used by the settings/menu) so it never persists dated dirs
+    # guard ALL future cfg.save() calls so they always save base dirs (never dated)
     if hasattr(cfg, "save") and _orig_cfg_save is None:
         _orig_cfg_save = cfg.save
 
         def _guarded_cfg_save(*a, **k):
-            # always save with base dirs
             _load_bases(cfg)
             _set_in_memory_to_bases(cfg)
             try:
                 return _orig_cfg_save(*a, **k)
             finally:
-                # only restore dated dirs in-memory if plugin is enabled
-                pm = getattr(getattr(cfg, "app", None), "plugin_manager", None)  # cfg may not have .app; safe fallback
-                enabled = pm and hasattr(pm, "is_plugin_enabled") and pm.is_plugin_enabled("pibooth_date_folder")
-                if enabled and _last_disp_targets:
+                if _last_disp_targets:
                     _set_in_memory(cfg, _last_disp_targets)
+
+        cfg.save = _guarded_cfg_save
+
+    # persist newly registered options NOW → [DATE_FOLDER] exists immediately
+    if hasattr(cfg, "save"):
+        cfg.save()
+
+    pm = getattr(cfg, "plugin_manager", None)
+    if pm and hasattr(pm, "is_plugin_enabled") and not pm.is_plugin_enabled("pibooth_date_folder"):
+        # plugin disabled → reset everything now so menu save writes base dirs only
+        _load_bases(cfg)
+        _set_in_memory_to_bases(cfg)
+        global _current_suffix, _last_disp_targets, _last_thr
+        _current_suffix = None
+        _last_disp_targets = None
+        _last_thr = None
 
 
 @pibooth.hookimpl
@@ -277,14 +289,13 @@ def state_wait_enter(app):
     cfg = app._config
     now = datetime.now()
 
-    # In state_wait_enter(), REPLACE the disabled branch with this block
     pm = getattr(app, "plugin_manager", None)
     if pm and hasattr(pm, "is_plugin_enabled") and not pm.is_plugin_enabled("pibooth_date_folder"):
-        # plugin OFF → revert to base dirs immediately (and keep it)
+        # Plugin OFF → revert to bases immediately
         _load_bases(cfg)
         _set_in_memory_to_bases(cfg)
     
-        # clear internal state so nothing brings dated dirs back
+        # Reset internal targets so nothing brings the dated path back
         global _current_suffix, _last_disp_targets, _last_thr
         _current_suffix = None
         _last_disp_targets = None
@@ -348,10 +359,6 @@ def state_wait_enter(app):
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
 
 
-
-
-
-
 @pibooth.hookimpl(tryfirst=True)
 def pibooth_cleanup(app):
     """
@@ -361,11 +368,5 @@ def pibooth_cleanup(app):
     cfg = app._config
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
-
-
-
-
-
-
 
 
