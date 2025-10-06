@@ -137,7 +137,7 @@ Given in your config::
 
 Changelog
 ---------
-- v1.5.5
+- v1.5.6
 
   🎉 Initial release of the pibooth-date-folder plugin.
 
@@ -173,6 +173,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
