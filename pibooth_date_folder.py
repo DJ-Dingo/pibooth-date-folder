@@ -156,6 +156,7 @@ def _set_in_memory_to_bases(cfg):
 
 
 
+
 # ---------- hooks ----------
 @pibooth.hookimpl
 def pibooth_configure(cfg):
@@ -247,10 +248,7 @@ def state_wait_enter(app):
     _ensure_dirs_exist(disp_targets)
     quoted_in_mem = _set_in_memory(cfg, disp_targets)
     # No _write_directory_line_on_disk → disabling plugin reverts immediately
-
-
-
-
+    
     _current_suffix     = new_suffix
     _last_disp_targets  = disp_targets
 
@@ -272,16 +270,3 @@ def pibooth_cleanup(app):
     if not _base_dirs_disp or not _base_dirs_abs:
         _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
-
-
-
-
-
-
-
-
-
-
-
-
-
