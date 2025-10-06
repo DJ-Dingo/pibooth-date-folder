@@ -2,10 +2,11 @@
 import os
 import re
 from datetime import datetime, timedelta
+from pathlib import Path
 import pibooth
 from pibooth.utils import LOGGER
 
-__version__ = "1.5.6"
+__version__ = "1.5.7"
 
 # Cached bases:
 #  - display form (may start with '~'), no trailing slash
@@ -93,7 +94,10 @@ def _strip_suffix_until_base(path):
     return p or "/"
 
 def _canon_abs(disp_path):
-    return os.path.normpath(os.path.expanduser(disp_path))
+    """Canonical absolute path for comparisons/dedup."""
+    p = Path(os.path.expanduser(disp_path)).resolve()
+    return str(p)
+
 
 def _normalize_bases_from_general(cfg):
     """Read GENERAL/directory (may already be dated) and return base paths (display & abs), deduped."""
@@ -121,8 +125,23 @@ def _load_bases(cfg):
     LOGGER.info("Date-folder v%s: bases = %r", __version__, _base_dirs_disp)
 
 def _build_disp_targets(suffix):
-    """Join display bases with suffix (no mkdir; PiBooth will create on save)."""
-    return [f"{disp}/{suffix}" for disp in _base_dirs_disp]
+    """Join display bases with suffix (normalized, no trailing slash)."""
+    targets = []
+    for disp in _base_dirs_disp:
+        # keep the display '~' form for writing back to config,
+        # but build/compare using a normalized join so we don't double-slash
+        joined = Path(os.path.expanduser(disp)).joinpath(suffix)
+        targets.append(str(joined).replace("//", "/"))
+    return targets
+
+def _ensure_dirs_exist(disp_targets):
+    """Create target folders if missing (idempotent)."""
+    for t in disp_targets:
+        try:
+            Path(t).mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            LOGGER.warning("Date-folder: cannot create %s: %s", t, e)
+
 
 def _set_in_memory(cfg, disp_targets):
     quoted = ', '.join(f'"{t}"' for t in disp_targets)
@@ -270,16 +289,19 @@ def state_wait_enter(app):
         LOGGER.info("Date-folder v%s: reusing '%s' (mode=%s)", __version__, new_suffix, mode)
         return
 
-    # Build targets (no mkdir), set in-memory, sync to disk
-    disp_targets  = _build_disp_targets(new_suffix)
+    # Build targets, ensure they exist, set in-memory, sync to disk
+    disp_targets = _build_disp_targets(new_suffix)
+    _ensure_dirs_exist(disp_targets)
     quoted_in_mem = _set_in_memory(cfg, disp_targets)
     _write_directory_line_on_disk(disp_targets)
+
 
     _current_suffix     = new_suffix
     _last_disp_targets  = disp_targets
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
+
 
 
 
