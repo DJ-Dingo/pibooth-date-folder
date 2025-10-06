@@ -167,51 +167,7 @@ def _read_current_directory_line():
                 return s.split('=', 1)[1].strip()
     return ""
 
-def _write_directory_line_on_disk(disp_targets):
-    """Update only GENERAL/directory on disk if different (preserve rest of file)."""
-    if not os.path.isfile(_CFG_FILE):
-        return
-    new_value = ', '.join(f'"{t}"' for t in disp_targets)
-    old_value = _read_current_directory_line()
-    if old_value == new_value:
-        return
 
-    try:
-        with open(_CFG_FILE, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-    except Exception as e:
-        LOGGER.warning("Date-folder: cannot read config file: %s", e)
-        return
-
-    out, in_general, replaced = [], False, False
-    for line in lines:
-        s = line.strip()
-        if s.startswith('[') and s.endswith(']'):
-            in_general = (s.upper() == '[GENERAL]')
-            out.append(line); continue
-        if in_general and '=' in s:
-            key = s.split('=', 1)[0].strip().lower()
-            if not replaced and key == 'directory':
-                indent = line[:len(line) - len(line.lstrip())]
-                out.append(f"{indent}directory = {new_value}\n")
-                replaced = True; continue
-        out.append(line)
-
-    if not replaced:
-        out2, inserted = [], False
-        for line in out:
-            out2.append(line)
-            if not inserted and line.strip().upper() == '[GENERAL]':
-                out2.append(f"directory = {new_value}\n"); inserted = True
-        if not inserted:
-            out2.append("\n[GENERAL]\n"); out2.append(f"directory = {new_value}\n")
-        out = out2
-
-    try:
-        with open(_CFG_FILE, 'w', encoding='utf-8') as f:
-            f.writelines(out)
-    except Exception as e:
-        LOGGER.warning("Date-folder: cannot write config file: %s", e)
 
 
 # ---------- hooks ----------
@@ -304,6 +260,7 @@ def state_wait_enter(app):
 
     LOGGER.info("Date-folder v%s: mode=%s thr=%s now=%02d:%02d -> %s",
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
+
 
 
 
