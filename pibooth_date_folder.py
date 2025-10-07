@@ -6,7 +6,7 @@ from pathlib import Path
 import pibooth
 from pibooth.utils import LOGGER
 
-__version__ = "1.5.7"
+__version__ = "1.5.8"
 
 
 # --- Cached base directories ---
@@ -330,4 +330,5 @@ def pibooth_cleanup(app):
     cfg = app._config
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
+
 
