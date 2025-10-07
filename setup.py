@@ -31,7 +31,10 @@ setup(
     ],
     python_requires=">=3.6",
 
-    entry_points={
+    entry_points = {
+        "pibooth": [
+            "date_folder = pibooth_date_folder",
+        ],
         "pibooth.plugins": [
             "date_folder = pibooth_date_folder",
         ],
@@ -61,3 +64,4 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )
+
