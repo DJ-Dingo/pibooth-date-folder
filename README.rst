@@ -148,7 +148,7 @@ Given in your config::
 
 
 | This version dont write in config file pibooth.cfg
-| **If you installed a previous version, your** ``**pibooth.cfg**`` **may contain a dated folder path.**  
+| **BUT If you installed a previous version, your** ``pibooth.cfg`` **may contain a dated folder path.**  
 | **Remove it/them, before using this version, to avoid nested directories. "See Uninstall below":**
 
 
@@ -233,6 +233,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
