@@ -147,20 +147,38 @@ Given in your config::
       "~/Pictures/pibooth/2025-07-12_start-hour_10-00", "~/Pictures/backup_booth/2025-07-12_start-hour_10-00"
 
 
+| This version dont write in config file pibooth.cfg
+| **If you installed a previous version, your** ``**pibooth.cfg**`` **may contain a dated folder path.**  
+| **Remove it/them, before using this version, to avoid nested directories. "See Uninstall below":**
 
 
 Uninstall
 ---------
-On current versions (v1.5.7+), the plugin does not write date folders to
-``pibooth.cfg``—so uninstalling typically requires no changes.
+| On current versions (v1.5.7+), the plugin does not write date folders to ``pibooth.cfg``
+| So uninstalling typically requires no changes.
+|
+| BUT if you previously used an older version ´´v1.5.5 an v1.5.6´´ that wrote a extra dated path to the base dir in config,
+| you should reset it in ``~/.config/pibooth/pibooth.cfg`` :
+|
+| Do this
 
-If you previously used an older version that wrote a dated path to the config,
-open ``~/.config/pibooth/pibooth.cfg`` and reset:
+.. code-block:: bash
 
-::
+   pibooth --config
 
-    [GENERAL]
-    directory = "~/Pictures/pibooth"
+Then edit the ``[GENERAL]/directory`` line and remove the dated part, for example:
+
+.. code-block:: ini
+
+   [GENERAL]
+   directory = "~/Pictures/pibooth/2025-07-11_start-hour_10-00"
+
+Change it to:
+
+.. code-block:: ini
+
+   [GENERAL]
+   directory = "~/Pictures/pibooth"
 
 You may also remove the entire ``[DATE_FOLDER]`` section if you wish.
 
@@ -215,6 +233,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
