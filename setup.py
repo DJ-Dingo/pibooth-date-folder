@@ -35,9 +35,6 @@ setup(
         "pibooth": [
             "date_folder = pibooth_date_folder",
         ],
-        "pibooth.plugins": [
-            "date_folder = pibooth_date_folder",
-        ],
     },
 
     license="GPL-3.0-or-later",
@@ -64,4 +61,5 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )
+
 
