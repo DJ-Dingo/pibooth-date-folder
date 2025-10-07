@@ -8,26 +8,23 @@ from pibooth.utils import LOGGER
 
 __version__ = "1.5.7"
 
-# Cached bases:
-#  - display form (may start with '~'), no trailing slash
-#  - absolute canonical (expanduser + normpath)
-_base_dirs_disp = None
-_base_dirs_abs  = None
 
-# Last chosen threshold (HH-MM) and active suffix we already applied
+# --- Cached base directories ---
+# • Display form: may start with '~', no trailing slash (written back to config)
+# • Absolute form: canonical (expanduser + normpath); used for comparison/deduplication
+_base_dirs_disp = None
+_base_dirs_abs = None
+# Last chosen threshold (HH:MM) and current active date-folder suffix
 _last_thr = None
 _current_suffix = None
 _last_disp_targets = None
 _orig_cfg_save = None
 
-# Detect our own suffix
+# Regex to detect date-folder suffix format
 _SUFFIX_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_start-hour_\d{2}-\d{2}$")
 
-
-
 # ---------- helpers ----------
-
-# --- v1.5: robust parsing for start_hour/start_minute ---
+# Parse and validate start_hour/start_minute values
 def _parse_threshold(cfg, default_h=10, default_m=0):
     """Read hour/minute from config and normalize to 0–23 / 0–59.
     Treats 24 as 0 (midnight). Clamps minutes to 0–59.
@@ -66,16 +63,15 @@ def _parse_threshold(cfg, default_h=10, default_m=0):
         LOGGER.info("Date-folder: normalized hour/min from %r:%r to %02d:%02d",
                     orig_h, orig_m, h, m)
     return h, m
-# --- end v1.5 helper ---
 
 def _is_plugin_disabled(cfg) -> bool:
+    """Return True if this plugin is disabled via GENERAL/plugins_disabled."""
     s = (cfg.get('GENERAL', 'plugins_disabled', fallback='') or '').lower()
-    # match both module and filename forms just in case
+    # Match both module and filename forms
     return ('pibooth_date_folder' in s) or ('pibooth_date_folder.py' in s)
 
-
-
 def _split_paths(raw: str):
+    """Split a comma-separated list of paths supporting quotes and escaping."""
     out, buf, q = [], [], None
     i, n = 0, len(raw)
     while i < n:
@@ -95,7 +91,7 @@ def _split_paths(raw: str):
                 out.append(s)
             buf = []; i += 1; continue
         buf.append(c); i += 1
-    # flush
+    # flush last buffer
     s = "".join(buf).strip()
     if s:
         out.append(s)
@@ -110,6 +106,7 @@ def _split_paths(raw: str):
 
 
 def _strip_suffix_until_base(path):
+    """Strip date-folder suffixes until the base directory is reached."""
     p = path.rstrip("/ ")
     while True:
         base = os.path.basename(p)
@@ -133,7 +130,7 @@ def _normalize_bases_from_general(cfg):
     """
     raw = cfg.get('GENERAL', 'directory', fallback='').strip()
     if not raw:
-        return [], []  # nothing set, don't guess
+        return [], []  # nothing set
 
     items = _split_paths(raw)
 
@@ -149,14 +146,14 @@ def _normalize_bases_from_general(cfg):
 
     return disp_list, abs_list
 
-
+# --- base loading and directory handling helpers ---
 def _load_bases(cfg):
     global _base_dirs_disp, _base_dirs_abs
     _base_dirs_disp, _base_dirs_abs = _normalize_bases_from_general(cfg)
     LOGGER.info("Date-folder v%s: bases = %r", __version__, _base_dirs_disp)
 
 def _build_disp_targets(suffix):
-    """Join display bases with suffix (preserve '~' in what we write)."""
+    """Join display bases with suffix (preserve '~' in what we write back)."""
     targets = []
     for disp in _base_dirs_disp:
         # keep display form (may start with '~')
@@ -166,13 +163,12 @@ def _build_disp_targets(suffix):
 
 
 def _ensure_dirs_exist(disp_targets):
-    """Create target folders if missing, expanding '~' only for the filesystem."""
+    """Create target directories if missing (expand '~' only for filesystem)."""
     for t in disp_targets:
         try:
             Path(os.path.expanduser(t)).mkdir(parents=True, exist_ok=True)
         except Exception as e:
             LOGGER.warning("Date-folder: cannot create %s: %s", t, e)
-
 
 
 def _set_in_memory(cfg, disp_targets):
@@ -190,8 +186,6 @@ def _set_in_memory_to_bases(cfg):
 
 # ---------- hooks ----------
 
-
-
 @pibooth.hookimpl(tryfirst=True)
 def pibooth_startup(cfg, app):
     """
@@ -200,8 +194,7 @@ def pibooth_startup(cfg, app):
     """
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
-
-    # Persist the newly registered options so [DATE_FOLDER] exists immediately
+    # Persist the newly registered options so [DATE_FOLDER] is created right away
     if hasattr(cfg, "save"):
         cfg.save()
 
@@ -224,12 +217,10 @@ def pibooth_configure(cfg):
     cfg.add_option('DATE_FOLDER', 'on_change_mode', 'strict',
                    "Mode for how folder switching is handled: strict (default) or force_today",
                    "On-change mode", ['strict', 'force_today'])
-
-    # snapshot bases (no dated suffix in memory)
+    # Snapshot base dirs (no dated suffix in memory)
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
-
-    # guard ALL future cfg.save() calls so they always save base dirs (never dated)
+    # Guard all future cfg.save() calls to always save base dirs (never dated)
     if hasattr(cfg, "save") and _orig_cfg_save is None:
         _orig_cfg_save = cfg.save
 
@@ -312,13 +303,13 @@ def state_wait_enter(app):
     _last_thr = thr
     new_suffix = f"{effective.strftime('%Y-%m-%d')}_start-hour_{thr}"
 
-    # If suffix unchanged, keep using current targets; do not touch disk
+    # If suffix unchanged, reuse current targets
     if _current_suffix == new_suffix and _last_disp_targets:
         _set_in_memory(cfg, _last_disp_targets)
         LOGGER.info("Date-folder v%s: reusing '%s' (mode=%s)", __version__, new_suffix, mode)
         return
 
-    # Build targets, ensure they exist, set in-memory (no CFG disk write)
+    # Build targets, ensure they exist, set in-memory (no config file write)
     disp_targets = _build_disp_targets(new_suffix)
     _ensure_dirs_exist(disp_targets)
     quoted_in_mem = _set_in_memory(cfg, disp_targets)
@@ -330,7 +321,6 @@ def state_wait_enter(app):
                 __version__, mode, thr, now.hour, now.minute, quoted_in_mem)
 
 
-
 @pibooth.hookimpl(tryfirst=True)
 def pibooth_cleanup(app):
     """
@@ -340,10 +330,4 @@ def pibooth_cleanup(app):
     cfg = app._config
     _load_bases(cfg)
     _set_in_memory_to_bases(cfg)
-
-
-
-
-
-
 
