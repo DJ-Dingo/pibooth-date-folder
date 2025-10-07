@@ -186,6 +186,12 @@ You may also remove the entire ``[DATE_FOLDER]`` section if you wish.
 Changelog
 ---------
 
+- **v1.5.9 (2025-10-08)**
+  
+  - Fixed unintended `setuptools` auto-upgrade caused by `pyproject.toml`.  
+  - Older Raspberry Pi OS environments will no longer be forced to upgrade `setuptools` during installation.
+
+
 - v1.5.8 (2025-10-07)
 
   - Fixed plugin registration so the plugin is correctly detected again.
@@ -240,6 +246,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
