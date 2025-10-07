@@ -6,12 +6,12 @@ pibooth-date-folder
 
 ``pibooth-date-folder`` is a plugin for the `pibooth`_ application.
 
-.. image:: docs/images/pibooth-date-folders.png
+.. image:: https://raw.githubusercontent.com/DJ-Dingo/pibooth-date-folder/main/docs/images/pibooth-date-folders.png
    :alt: Pibooth image folders, when using this plugin
    :align: center
    :width: 50%
 
-It organizes photos into per-date folders with a configurable
+It organizes ``Photos`` and ``Raw folders`` into per-date folders with a configurable
 split time, supporting multiple quoted base directories.
 
 .. contents::
@@ -31,22 +31,26 @@ You must ensure that the device has a **correct system clock** before running Pi
 - **A hardware RTC module** (e.g., DS3231)  
 - **Manually setting the system time** prior to launching PiBooth
 
-If the system time is incorrect, the plugin may create folders under the wrong date or switch at unexpected times.
+⚠️ **Important:** If the system time is incorrect, the plugin will create folders under the *wrong date* or switch at *unexpected times*.
 
 
 Installation
 ------------
-Run::
+Run:
 
-    pip install pibooth-date-folder
+.. code-block:: bash
+
+    pip3 install pibooth-date-folder
+
 
 PiBooth will auto-discover the plugin—**no edits** to your `pibooth.cfg` are needed.
 
 Configuration
 -------------
 On first launch, this plugin adds a `[DATE_FOLDER]` section to your
-`~/.config/pibooth/pibooth.cfg`::
+`~/.config/pibooth/pibooth.cfg`:
 
+.. code-block:: ini
 
     [DATE_FOLDER]
     # Hour when a new date-folder starts (0–23, default: 10)
@@ -62,12 +66,12 @@ Changes take effect at the start of the next photo session.
 Setup in Pibooth Menu
 ---------------------
 
-.. image:: docs/images/settings-menu.png
+.. image:: https://raw.githubusercontent.com/DJ-Dingo/pibooth-date-folder/main/docs/images/settings-menu.png
    :alt: Pibooth settings menu showing Date_folder entry
    :align: center
    :width: 60%
 
-.. image:: docs/images/date-folder-menu.png
+.. image:: https://raw.githubusercontent.com/DJ-Dingo/pibooth-date-folder/main/docs/images/date-folder-menu.png
    :alt: Date_folder plugin settings screen
    :align: center
    :width: 60%
@@ -79,9 +83,12 @@ Setup in Pibooth Menu
   Define the daily time when a new folder should start. Useful if your events run past midnight but should count as the same “day” (e.g. starting a new folder at 10:00 the next day).
 
 
-- **on_change_mode**  
+- **on_change_mode**
+
   - ``strict`` *(default)* — The folder switches exactly at the configured time every day, even if no sessions have occurred yet.
-  - ``force_today`` — The folder always matches the current calendar date, ignoring the configured time.
+
+  - ``force_today`` — The folder automatically switches at midnight (00:00) to match the new calendar date, regardless of the configured threshold time.  
+    The configured time is still included in the folder name for consistency, but it does not affect when switching occurs like ``strict`` does.
 
 
 Usage
@@ -101,10 +108,10 @@ Usage
 
 
    - under each of your original base directories.  
-   - Overrides PiBooth’s in-memory directory to the quoted list of these new folders (no cfg write).
+   - Overrides PiBooth’s in-memory directory to the quoted list of these new folders (no pibooth.cfg write).
 
-   Note: When the plugin is disabled in the Pibooth menu, it temporarily reverts
-   to the default ``~/Pictures/pibooth`` directories in memory only (no cfg write).
+   Note: When the plugin is disabled in the Pibooth menu (General, Manage Plugins), it temporarily reverts
+   to the default ``~/Pictures/pibooth`` directories in memory only (no pibooth.cfg write).
 
 
 
@@ -160,27 +167,34 @@ You may also remove the entire ``[DATE_FOLDER]`` section if you wish.
 
 Changelog
 ---------
-- v1.5.7
+- v1.5.7 (2025-10-07) — ⚠️⚠️ Important update
 
   🎉 Re-release of the pibooth-date-folder plugin.
 
-  - Automatically organizes photos into date-based folders  
-  - Configurable daily switch time  
+  **Highlights**
+  
+  - Automatically organizes photos into date-based folders
+  - Configurable daily switch time
   - Works with multiple base directories
-  -
+
+  **Changes**
+  
   - Changed behavior to no longer write dated directories into the config file
-  - When disabled via Pibooth menu, the plugin now temporarily reverts to the default directories in memory only (no cfg write)
+  - When disabled via the PiBooth menu, the plugin now temporarily reverts to the default directories in memory only (no ``pibooth.cfg`` write)
   - Improved folder creation to be idempotent and avoid duplicate entries
-  - 
   - Normalize base/target paths to ensure existing folders are reused
-  - Add safe directory creation with exist_ok=True
-  - Update README image links to raw URLs for PyPI rendering
-  - In-memory override of `GENERAL/directory`
+  - Safe directory creation with ``exist_ok=True``
+  - In-memory override of ``GENERAL/directory``
   - Added ``on_change_mode`` (``strict`` default / ``force_today`` override)
-  - Keeps multiple quoted base paths and `~` prefix
+  - Keeps multiple quoted base paths and ``~`` prefix
   - Switched hour range to 0–23 (UI/docs) for clarity
   - Legacy value 24 is treated as 00 (midnight) internally
   - Clamps minutes to 0–59 for robustness
+
+  **Other**
+  
+  - Update README image links to raw URLs for PyPI rendering
+
 
 
 License
@@ -201,6 +215,7 @@ Links
    :target: https://pypi.org/project/pibooth-date-folder
 .. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth-date-folder.svg
    :target: https://pypi.org/project/pibooth-date-folder
+
 
 
 
