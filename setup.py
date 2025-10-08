@@ -14,7 +14,7 @@ setup(
     version=VERSION,
     author="Kenneth Nicholas Jørgensen",
     author_email="",
-    description="PiBooth plugin to split/save sessions into date-based folders with an optional daily time threshold.",
+    description="PiBooth plugin to split/save photo´s into date-based folders with an optional daily time threshold.",
     long_description=(HERE / "README.rst").read_text(encoding="utf-8"),
     long_description_content_type="text/x-rst",
     url="https://github.com/DJ-Dingo/pibooth-date-folder",
@@ -61,5 +61,6 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )
+
 
 
